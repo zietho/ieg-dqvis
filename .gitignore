@@ -3,6 +3,7 @@
 
 .idea/compiler.xml
 .idea/*
-.out/*
-.target
-.target/*
+out/*
+target
+target/*
+
