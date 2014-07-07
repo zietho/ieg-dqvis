@@ -8,4 +8,5 @@ target
 target/*
 src/main/resources/d3/*
 src/main/resources/d3
-
+src/main/resources/data
+src/main/resources/data/*
