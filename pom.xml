@@ -8,6 +8,7 @@
     <version>1.0-SNAPSHOT</version>
     <properties>
         <dropwizard.version>0.7.0</dropwizard.version>
+        <jetty.version>9.0.7.v20131107</jetty.version>
         <!-- use UTF-8 for everything -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -19,6 +20,17 @@
             <artifactId>dropwizard-core</artifactId>
             <version>${dropwizard.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.7</version>
+        </dependency>
+
     </dependencies>
 
     <build>

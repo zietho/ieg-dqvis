@@ -6,28 +6,32 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Created by evolution on 11/07/2014.
  */
 public class TemporalColumn {
-    private String date;
-    private String column;
-    private String quality;
+    private int date;
+    private double column;
+    private int quality;
 
-    public TemporalColumn(String date, String column, String quality){
+    public TemporalColumn(){
+        //jackson
+    }
+
+    public TemporalColumn(int date, double column, int quality){
         this.date = date;
         this.column = column;
-        this.quality=quality;
+        this.quality = quality;
     }
 
     @JsonProperty
-    public String getDate() {
+    public int getDate() {
         return date;
     }
 
     @JsonProperty
-    public String getColumn() {
+    public double getColumn() {
         return column;
     }
 
     @JsonProperty
-    public String getQuality() {
+    public int getQuality() {
         return quality;
     }
 }

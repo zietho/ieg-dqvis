@@ -3,8 +3,11 @@ package core;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.Length;
 
+import java.util.ArrayList;
+
 public class Saying {
     private long id;
+    private ArrayList<String> time;
 
     @Length(max = 3)
     private String content;
@@ -27,4 +30,5 @@ public class Saying {
     public String getContent() {
         return content;
     }
+
 }

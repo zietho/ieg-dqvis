@@ -11,6 +11,20 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="TimeBench" exported="" />
+    <orderEntry type="module" module-name="Prefuse" exported="" />
+    <orderEntry type="module" module-name="ieg-prefuse" exported="" />
+    <orderEntry type="module" module-name="ieg-util" exported="" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../TimeBench/lib" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/../TimeBench/lib" recursive="false" />
+      </library>
+    </orderEntry>
     <orderEntry type="library" name="Maven: io.dropwizard:dropwizard-core:0.7.0" level="project" />
     <orderEntry type="library" name="Maven: io.dropwizard:dropwizard-util:0.7.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.3.0" level="project" />
@@ -25,7 +39,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-joda:2.3.2" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.1.1" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.6" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.7" level="project" />
     <orderEntry type="library" name="Maven: io.dropwizard:dropwizard-validation:0.7.0" level="project" />
     <orderEntry type="library" name="Maven: org.hibernate:hibernate-validator:5.0.2.Final" level="project" />
     <orderEntry type="library" name="Maven: javax.validation:validation-api:1.1.0.Final" level="project" />
