@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<temporal-data-column-specifaction>
+    <calendar>0</calendar>
+    <fail-on-illegal-rows>false</fail-on-illegal-rows>
+    <encodings>
+        <string-instant key="date">
+            <data-element>
+                <column>h</column>
+                <column>f</column>
+                <column>m1</column>
+                <column>m2</column>
+                <column>p1</column>
+                <column>r</column>
+                <column>t</column>
+                <column>p2</column>
+                <column>w</column>
+                <column>h.MissingData</column>
+                <column>h.InvalidData</column>
+                <column>f.MissingData</column>
+                <column>f.InvalidData</column>
+                <column>m1.MissingData</column>
+                <column>m1.InvalidData</column>
+                <column>m2.MissingData</column>
+                <column>m2.InvalidData</column>
+                <column>p1.MissingData</column>
+                <column>p1.InvalidData</column>
+                <column>r.MissingData</column>
+                <column>r.InvalidData</column>
+                <column>t.MissingData</column>
+                <column>t.InvalidData</column>
+                <column>p2.MissingData</column>
+                <column>p2.InvalidData</column>
+                <column>w.MissingData</column>
+                <column>w.InvalidData</column>
+                <column>MissingTimeStamp</column>
+            </data-element>
+            <granularity-id>0</granularity-id>
+            <granularity-context-id>0</granularity-context-id>
+            <temporal-column>Timestamp</temporal-column>
+            <date-time-pattern>yyyy-MM-dd HH:mm:ss</date-time-pattern>
+        </string-instant>
+    </encodings>
+    <text-table>
+        <method>csv</method>
+        <has-header>true</has-header>
+        <parse-dates>true</parse-dates>
+    </text-table>
+</temporal-data-column-specifaction>

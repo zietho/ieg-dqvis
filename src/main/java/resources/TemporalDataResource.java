@@ -3,42 +3,36 @@ package resources;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import core.TemporalColumn;
-import core.TemporalData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prefuse.data.Schema;
 import prefuse.data.column.Column;
 import timeBench.data.TemporalDataset;
-import timeBench.data.TemporalElement;
-import timeBench.data.TemporalObject;
-import timeBench.util.DebugHelper;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by evolution on 10/07/2014.
  */
-@Path("/read-data")
+@Path("/get-data")
 @Produces(MediaType.APPLICATION_JSON)
-public class TimeBenchRessource {
+public class TemporalDataResource {
     public TemporalDataset data;
-    public Logger logger = LoggerFactory.getLogger(TimeBenchRessource.class);
+    final Logger logger = LoggerFactory.getLogger(TemporalDataResource.class);
 
-    public TimeBenchRessource(TemporalDataset data){
+    public TemporalDataResource(TemporalDataset data){
         this.data = data;
-        logger.info("data works! " + data.getRootCount()+ " objects loaded!");
+        logger.info("{} data sets loaded", data.getRootCount());
     }
 
     @GET
     @Timed
     public List<TemporalColumn> readData(@QueryParam("column") String column, @QueryParam("granularity") Optional<String> granularity){
-        TemporalData temporalData = new TemporalData();
+        core.TemporalData temporalData = new core.TemporalData();
 
         if(column != null && !column.equals("")){
             //first get the column and convert it to an array list
@@ -49,7 +43,7 @@ public class TimeBenchRessource {
             for(int i=0; i<dataColumn.getRowCount(); i++){
                 double dataValue = (double) dataColumn.get(i);
                 int qualityValue = (missingDataColumn.get(i).toString().equals("1") || invalidDataColumn.get(i).toString().equals("1")) ? 1 : 0;
-                int dateValue = Integer.parseInt(data.getTemporalElements().getTemporalElementByRow(i).toString());
+                long dateValue = data.getTemporalElements().getTemporalElementByRow(i).getInf();
 
 //                data.getTemporalElements().getTemporalElementByRow(i).getInf();  fuer timestmap
                 TemporalColumn temporalColumn = new TemporalColumn(dateValue, dataValue, qualityValue);

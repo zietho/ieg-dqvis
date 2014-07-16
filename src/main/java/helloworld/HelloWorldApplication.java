@@ -4,17 +4,13 @@ import data.DataDAO;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import prefuse.data.io.DataIOException;
-import resources.HelloWorldResource;
+import resources.AvailableColumnsResource;
 import healthcheck.TemplateHealthCheck;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
-import resources.TimeBenchRessource;
-import timeBench.data.TemporalDataException;
+import resources.TemporalDataResource;
 import timeBench.data.TemporalDataset;
 
 import javax.servlet.DispatcherType;
-import javax.xml.bind.JAXBException;
-import java.io.IOException;
 import java.util.EnumSet;
 
 public class HelloWorldApplication extends Application<HelloWorldConfiguration> {
@@ -36,36 +32,25 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration> 
         final String data = "src/main/resources/data/01_raw_data_set1_preprocessed_markus.csv";
         final String spec = "src/main/resources/data/spec2.xml";
 
-        try {
-            DataDAO dataDAO = new DataDAO(data,spec); //define
-            drillingData = dataDAO.read();
-            System.out.println("finished");
-        } catch (DataIOException e) {
-            e.printStackTrace();
-        } catch (TemporalDataException e) {
-            e.printStackTrace();
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+        DataDAO dataDAO = new DataDAO(data,spec); //define
+        drillingData = dataDAO.read();
+        System.out.println("finished");
+
 
     }
 
     @Override
     public void run(HelloWorldConfiguration configuration,
                     Environment environment) {
-        final HelloWorldResource resource = new HelloWorldResource(
-                configuration.getTemplate(),
-                configuration.getDefaultName()
-        );
 
-        final TimeBenchRessource tbResource = new TimeBenchRessource(drillingData);
+        final TemporalDataResource temporalDataResource = new TemporalDataResource(drillingData);
+        final AvailableColumnsResource availableColumnsResource = new AvailableColumnsResource(drillingData);
         final TemplateHealthCheck healthCheck = new TemplateHealthCheck(configuration.getTemplate());
 
-        environment.healthChecks().register("template", healthCheck);
-        environment.jersey().register(resource);
-        environment.jersey().register(tbResource);
+        environment.jersey().register(temporalDataResource);
+        environment.jersey().register(availableColumnsResource);
+
         environment.servlets().addFilter("CrossOriginFilter", new CrossOriginFilter()).addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
         environment.servlets().setInitParameter("allowedOrigins", "*");
         environment.servlets().setInitParameter("allowedHeaders", "X-Requested-With,Content-Type,Accept,Origin,Access-Control-Request-Method,Authorization,Access-Control-Request-Method");

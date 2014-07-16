@@ -2,36 +2,41 @@ package core;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
 /**
  * Created by evolution on 11/07/2014.
  */
 public class TemporalColumn {
-    private int date;
-    private double column;
-    private int quality;
+    String name;
+    List<TemporalValue> column;
 
     public TemporalColumn(){
-        //jackson
-    }
-
-    public TemporalColumn(int date, double column, int quality){
-        this.date = date;
-        this.column = column;
-        this.quality = quality;
+        //desirialize by json
     }
 
     @JsonProperty
-    public int getDate() {
-        return date;
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @JsonProperty
-    public double getColumn() {
+    public List<TemporalValue> getColumn() {
         return column;
     }
 
-    @JsonProperty
-    public int getQuality() {
-        return quality;
+    public void setColumn(List<TemporalValue> column) {
+        this.column = column;
+    }
+
+    public void add(TemporalValue temporalValue){
+        column.add(temporalValue);
     }
 }
+
