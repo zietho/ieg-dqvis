@@ -18,14 +18,16 @@ public class DataDAOTest {
         //set paths for data
         final String data = "src/test/resources/data/test.csv";
         final String spec = "src/test/resources/data/test.xml";
-        DataDAO dataDAO = new DataDAO(data, spec);
-        TemporalDataset temporalDataset = dataDAO.read();
+        DataDAO dataDAO = new CsvDAO(data, spec);
+        TemporalDataset temporalDataset = (TemporalDataset) dataDAO.getDataset();
+        assertTrue(temporalDataset != null);
         assertTrue(temporalDataset.getTemporalObjectTable().getRowCount() > 0);
     }
 
     @Test
     public void testAggregate() throws Exception {
-        final String data = "src/test/resources/data/test.csv";
+       assertTrue(false);
+       /* final String data = "src/test/resources/data/test.csv";
         final String spec = "src/test/resources/data/test.xml";
         DataDAO dataDAO = new DataDAO(data, spec);
         TemporalDataset temporalDataset = dataDAO.read();
@@ -45,7 +47,7 @@ public class DataDAOTest {
                 System.out.println(node.toString());
                 node.getChildCount();
             }
-        }
+        }*/
     }
 
 

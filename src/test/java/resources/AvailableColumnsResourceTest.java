@@ -1,6 +1,7 @@
 package resources;
 
 import com.sun.jersey.api.client.WebResource;
+import data.CsvDAO;
 import data.DataDAO;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.*;
@@ -16,17 +17,12 @@ public class AvailableColumnsResourceTest {
     public static TemporalDataset tmpds = null;
 
     @Rule
-    public ResourceTestRule resources = ResourceTestRule.builder()
-            .addResource(new AvailableColumnsResource(tmpds))
+    public ResourceTestRule resources = ResourceTestRule.builder().addResource(new AvailableColumnsResource(new CsvDAO("src/test/resources/data/test.csv","src/test/resources/data/test.xml")))
             .build();
 
     @BeforeClass
     public static void setup() {
-        //set paths for data
-        final String data = "src/test/resources/data/test.csv";
-        final String spec = "src/test/resources/data/test.xml";
-        DataDAO dataDAO = new DataDAO(data, spec);
-        tmpds = dataDAO.read();
+
     }
 
     @Test

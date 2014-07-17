@@ -13,7 +13,8 @@ function TimeSeriesView() {
 
     function chart(selection) {
         selection.each(function(data) {
-
+            console.log(data)
+            data = data.data[0].column;
             // Convert data to standard representation greedily;
             // this is needed for nondeterministic accessors.
             data = data.map(function(d, i) {

@@ -3,6 +3,8 @@ package resources;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import core.TemporalColumn;
+import core.TemporalData;
+import data.DataDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import prefuse.data.column.Column;
@@ -23,35 +25,21 @@ import java.util.List;
 public class TemporalDataResource {
     public TemporalDataset data;
     final Logger logger = LoggerFactory.getLogger(TemporalDataResource.class);
+    private DataDAO dataDAO;
 
-    public TemporalDataResource(TemporalDataset data){
-        this.data = data;
-        logger.info("{} data sets loaded", data.getRootCount());
+    public TemporalDataResource(DataDAO dataDAO){
+        this.dataDAO = dataDAO;
     }
 
     @GET
     @Timed
-    public List<TemporalColumn> readData(@QueryParam("column") String column, @QueryParam("granularity") Optional<String> granularity){
-        core.TemporalData temporalData = new core.TemporalData();
-
-        if(column != null && !column.equals("")){
-            //first get the column and convert it to an array list
-            Column dataColumn = data.getTemporalObjectTable().getColumn(column);
-            Column missingDataColumn = data.getTemporalObjectTable().getColumn(column+".MissingData");
-            Column invalidDataColumn = data.getTemporalObjectTable().getColumn(column+".InvalidData");
-
-            for(int i=0; i<dataColumn.getRowCount(); i++){
-                double dataValue = (double) dataColumn.get(i);
-                int qualityValue = (missingDataColumn.get(i).toString().equals("1") || invalidDataColumn.get(i).toString().equals("1")) ? 1 : 0;
-                long dateValue = data.getTemporalElements().getTemporalElementByRow(i).getInf();
-
-//                data.getTemporalElements().getTemporalElementByRow(i).getInf();  fuer timestmap
-                TemporalColumn temporalColumn = new TemporalColumn(dateValue, dataValue, qualityValue);
-                temporalData.add(temporalColumn);
-            }
+    public TemporalData readData(@QueryParam("column") Optional<String> column, @QueryParam("granularity") Optional<String> granularity){
+        if(column.isPresent()) {
+            TemporalData temporalData = new TemporalData();
+            temporalData.add(dataDAO.read(column.or("h")));
+            return temporalData;
+        }else{
+            return dataDAO.read();
         }
-
-        return temporalData.getData();
     }
-
 }

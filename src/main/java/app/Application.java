@@ -1,23 +1,22 @@
-package helloworld;
+package app;
 
+import data.CsvDAO;
 import data.DataDAO;
-import io.dropwizard.Application;
+import io.dropwizard.Configuration;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import resources.AvailableColumnsResource;
-import healthcheck.TemplateHealthCheck;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import resources.TemporalDataResource;
-import timeBench.data.TemporalDataset;
 
 import javax.servlet.DispatcherType;
 import java.util.EnumSet;
 
-public class HelloWorldApplication extends Application<HelloWorldConfiguration> {
+public class Application extends io.dropwizard.Application<ApplicationConfiguration> {
     public static void main(String[] args) throws Exception {
-        new HelloWorldApplication().run(args);
+        new Application().run(args);
     }
-    public TemporalDataset drillingData = null; //create empty temp ds
+    private DataDAO dataDAO;
 
 
     @Override
@@ -26,27 +25,17 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration> 
     }
 
     @Override
-    public void initialize(Bootstrap<HelloWorldConfiguration> bootstrap) {
-
-        //set paths for data
+    public void initialize(Bootstrap bootstrap) {
+        //set paths for data and initialize a DAO object for retrieving data
         final String data = "src/main/resources/data/01_raw_data_set1_preprocessed_markus.csv";
         final String spec = "src/main/resources/data/spec2.xml";
-
-
-        DataDAO dataDAO = new DataDAO(data,spec); //define
-        drillingData = dataDAO.read();
-        System.out.println("finished");
-
-
+        this.dataDAO = new CsvDAO(data,spec); //init implementation of dataDAO
     }
 
     @Override
-    public void run(HelloWorldConfiguration configuration,
-                    Environment environment) {
-
-        final TemporalDataResource temporalDataResource = new TemporalDataResource(drillingData);
-        final AvailableColumnsResource availableColumnsResource = new AvailableColumnsResource(drillingData);
-        final TemplateHealthCheck healthCheck = new TemplateHealthCheck(configuration.getTemplate());
+    public void run(ApplicationConfiguration configuration, Environment environment) throws Exception {
+        final TemporalDataResource temporalDataResource = new TemporalDataResource(dataDAO);
+        final AvailableColumnsResource availableColumnsResource = new AvailableColumnsResource(dataDAO);
 
         environment.jersey().register(temporalDataResource);
         environment.jersey().register(availableColumnsResource);

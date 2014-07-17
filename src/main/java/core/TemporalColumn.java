@@ -3,6 +3,7 @@ package core;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -14,6 +15,7 @@ public class TemporalColumn {
     List<TemporalValue> column;
 
     public TemporalColumn(){
+        this.column = new ArrayList<TemporalValue>();
         //desirialize by json
     }
 
