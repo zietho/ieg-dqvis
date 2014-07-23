@@ -1,3 +1,6 @@
+/**
+ * Created by evolution on 17/07/2014.
+ */
 function QualityBarView() {
     var margin= {top: 20,right: 80, bottom: 30, left: 50},
         width =  960 - margin.left - margin.right,
@@ -7,13 +10,10 @@ function QualityBarView() {
 
     function chart(selection) {
         selection.each(function(data) {
-            //TODO - workaround - also make it available for multiple channels;
-            var rawData =  data;
-
-
+            var rawData = data
+            console.log(rawData)
             // Convert data to standard representation greedily;
             // this is needed for nondeterministic accessors.
-
             data = data.map(function(d, i) {
                 return [xValue.call(data, d, i), yValue.call(data, d, i)];
             });
@@ -22,28 +22,27 @@ function QualityBarView() {
             var svg = d3.select(this).selectAll("svg")
             var g = svg.append("g")
             var dqbar = svg.append("rect")
-             .attr("class", "line")
-             .attr("x", 0)
-             .attr("y", 0)
-             .attr("width", width)
-             .attr("height",100);
+                .attr("class", "line")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("width", width)
+                .attr("height",100);
 
-             g.selectAll("rect")
-             .data(rawData)
-             .enter()
-             .append("rect")
-             .attr("x", function(d,i){
-                return i * (width / data.length);
-             })
-             .attr("y", 0)
-             .attr("width", function(d,i){
-             return width/data.length;
-             })
-             .attr("height",100)
-             .attr("fill", function(d){
-
-             return "rgb(0, 0, " + (d.quality * 100) + ")";
-             })
+            g.selectAll("rect")
+                .data(rawData)
+                .enter()
+                .append("rect")
+                .attr("x", function(d,i){
+                    return i * (width / data.length);
+                })
+                .attr("y", 0)
+                .attr("width", function(d,i){
+                    return width/data.length;
+                })
+                .attr("height",100)
+                .attr("fill", function(d){
+                    return "rgb(0, 0, " + (d.quality * 100) + ")";
+                })
 
         });
     }

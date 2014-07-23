@@ -3,6 +3,7 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
+    <link href="/css/jquery-ui.min.css" rel="stylesheet">
 </head>
 <style>
 
@@ -15,6 +16,11 @@
         fill: none;
         stroke: #000;
         shape-rendering: crispEdges;
+    }
+
+    #visualization{
+        float:left;
+        width:70%;
     }
 
     .x.axis path {
@@ -34,59 +40,125 @@
 
     }
 
+    .area {
+        fill: steelblue;
+        clip-path: url(#clip);
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+
+    .brush .extent {
+        stroke: #fff;
+        fill-opacity: .125;
+        shape-rendering: crispEdges;
+    }
+
+    #columns{
+        margin-top:20px;
+
+    }
+
+    #columns li{
+        font-size:1.2em;
+    }
+
+
+    #slider{
+        clear:both;
+        margin-left:50px;
+        width:750px;
+    }
+
+    h1#columnHeader{
+        margin-top:100px;
+    }
+
 </style>
 <body>
 <h1>Data Quality Visualization</h1>
 <h2>powered by <a href="http://d3js.org/">d3.js</a>, <a href="https://dropwizard.github.io/dropwizard/">Dropwizzard</a> and <a href="https://github.com/ieg-vienna/TimeBench">TimeBench</a></h2>
-<p id="example"/>
+<p id="visualization"/>
+<h1 id="columnHeader">Available Columns</h1>
+<ul id="columns"></ul>
+<div id="slider"></div>
 <script src="/d3/d3.js"></script>
+<script src="/js/jquery.js"></script>
+<script src="/js/jquery-ui.min.js"></script>
+<script src="/js/jquery-draggableslider.js"></script>
 <script src="/js/timeseriesview.js"></script>
 <script src="/js/qualitybarview.js"></script>
+<script src="/js/timesliderview.js"></script>
+<script src="/js/columnsview.js"></script>
 <script>
 
     //global vars
-    var heightOfQualityBar = 100,
-        serverUrl = "http://localhost:8080",
-        column = "w";
-
-    //get chart
-    var timeSeriesView = TimeSeriesView()
-        .x(function(d) { return new Date(+d.date); })
-        .y(function(d) { return +d.column; })
-        .margin({top: 120,right: 80, bottom: 30, left: 50})
-        .column(column);
+   var serverUrl = "http://localhost:8080",
+       column = "w";
 
     var qualityBarView = QualityBarView()
-        .x(function(d) { return new Date(+d.date); })
-        .y(function(d) { return +d.quality; })
+                            .x(function(d) { return new Date(+d.date); })
+                            .y(function(d) { return +d.quality; })
+                            .height(100)
+                            .margin({top: 0,right: 80, bottom: 30, left: 50})
 
+    var timeSeriesView = TimeSeriesView()
+            .x(function(d) { return new Date(+d.date); })
+            .y(function(d) { return +d.column; })
+            .height(500)
+            .width(800)
+            .margin({top: 120,right: 0, bottom: 20, left: 50})
+            .column(column);
+
+    var timeSliderView = TimeSliderView()
+                            .width(timeSeriesView.width)
+                            .timeSeriesView(timeSeriesView)
+                            .sliderId("#slider");
+
+    var columnsView = ColumnsView()
+                        .height(500)
+                        .margin({top:120, right:80, bottom:30, left:50})
+                        .timeSeriesView(timeSeriesView);
 
     //get data
     d3.json(serverUrl+"/get-data?column="+column, function(error, json) {
         if (error) return console.warn(error);
-        var data = d3.select("#example")
-          .datum(json);
-        data.call(timeSeriesView);
-        console.log(json);
-        data.call(qualityBarView);
+        var data = d3.select("#visualization")
+          .datum(json.columns);
+          data.call(timeSeriesView);
+
+        d3.select("#visualization")
+          .datum(json.columns[0].values)
+          .call(qualityBarView);
+
+        d3.select("#visualization")
+          .datum(json.columns[0].values)
+          .call(timeSliderView);
+
+
+
+
+    })
+
+    d3.json(serverUrl+"/get-available-columns", function(error, json) {
+        if (error) return console.warn(error);
+
+        var columns = d3.select("#columns")
+        .datum(json)
+        columns.call(columnsView);
 
     })
 
 
-//     focus + context
-    /* var brush = d3.svg.brush()
-     .x(x2)
-     .on("brush", brushed);*/
+
+</script>
+</div>
 
 
-
-
-    // var timeSliderView = TimeSliderView()
-    /*function brushed() {
-        x.domain(brush.empty() ? x2.domain() : brush.extent());
-        focus.select(".area").attr("d", area);
-        focus.select(".x.axis").call(xAxis);
-    }*/
 
 </script>
 </body>

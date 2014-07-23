@@ -18,11 +18,12 @@ import javax.ws.rs.core.MediaType;
 @Produces(MediaType.APPLICATION_JSON)
 public class AvailableColumnsResource {
     Logger logger = LoggerFactory.getLogger(TemporalDataResource.class);
-    core.Schema schema = new core.Schema();
-    DataDAO dataDAO;
+    private core.Schema schema;
+    private DataDAO dataDAO;
 
     public AvailableColumnsResource(DataDAO dataDAO) {
         this.dataDAO = dataDAO;
+        this.schema = this.dataDAO.getColumnNames();
     }
 
     @GET

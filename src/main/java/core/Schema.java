@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class Schema {
     List<core.Column> columns;
+    int values;
 
     public Schema(){
         columns =  new ArrayList<core.Column>();
@@ -18,6 +19,15 @@ public class Schema {
     @JsonProperty
     public List<core.Column> getColumns() {
         return columns;
+    }
+
+    @JsonProperty
+    public int getValues(){
+        return values;
+    }
+
+    public void setValues(int values) {
+        this.values = values;
     }
 
     public void addColumn(core.Column column){

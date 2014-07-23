@@ -29,6 +29,7 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlets</artifactId>
             <version>${jetty.version}</version>
+
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -40,6 +41,7 @@
             <artifactId>junit</artifactId>
             <version>4.11</version>
             <scope>test</scope>
+
         </dependency>
         <dependency>
             <!-- needs extra dependencies: objenesis & hamcrest -->
@@ -49,6 +51,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
 
     <build>
         <plugins>

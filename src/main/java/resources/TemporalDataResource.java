@@ -28,13 +28,21 @@ public class TemporalDataResource {
     private DataDAO dataDAO;
 
     public TemporalDataResource(DataDAO dataDAO){
+
         this.dataDAO = dataDAO;
+        //this.dataDAO.aggregate();
     }
 
     @GET
     @Timed
-    public TemporalData readData(@QueryParam("column") Optional<String> column, @QueryParam("granularity") Optional<String> granularity){
+    public TemporalData readData(@QueryParam("column") Optional<String> column, @QueryParam("granularity") Optional<String> granularity, @QueryParam("from") Optional<String> from, @QueryParam("to") Optional<String> to){
         if(column.isPresent()) {
+            if(granularity.isPresent()){
+                TemporalData temporalData = new TemporalData();
+                temporalData.add(dataDAO.read(column.or("h")));
+                return temporalData;
+            }
+
             TemporalData temporalData = new TemporalData();
             temporalData.add(dataDAO.read(column.or("h")));
             return temporalData;

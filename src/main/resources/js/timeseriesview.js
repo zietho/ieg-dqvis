@@ -1,87 +1,120 @@
 function TimeSeriesView() {
     var margin= {top: 20,right: 80, bottom: 30, left: 50},
-        width =  960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom,
-        column = "h",
-        xValue = function(d) { return d[0]; },
-        yValue = function(d) { return d[1]; },
+        width =  960,
+        height = 500,
+        xValue = undefined,
+        yValue = undefined,
         xScale = d3.time.scale(),
         yScale = d3.scale.linear(),
         xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickSize(6, 0),
         yAxis = d3.svg.axis().scale(yScale).orient("left"),
-        line = d3.svg.line().x(X).y(Y);
+        line = d3.svg.line().x(X).y(Y),
+        lineWrapper = function(d) { return line(d.values);}
+        svg = undefined;
+        gEnter = undefined;
+        g = undefined;
+        color =  d3.scale.category10(),
+        channels = new Array();
+
 
     function chart(selection) {
-        selection.each(function(data) {
-            console.log(data)
-            data = data.data[0].column;
-            // Convert data to standard representation greedily;
-            // this is needed for nondeterministic accessors.
-            data = data.map(function(d, i) {
-                return [xValue.call(data, d, i), yValue.call(data, d, i)];
-            });
+
+        selection.each(function(json) {
+            channels.push(json[0]);
 
             // Update the x-scale.
             xScale
-                .domain(d3.extent(data, function(d) { return d[0]; }))
+                .domain(d3.extent(channels[0].values, xValue))
                 .range([0, width - margin.left - margin.right]);
 
             // Update the y-scale.
             yScale
-                .domain([d3.min(data, function(d) { return d[1]; }), d3.max(data, function(d) { return d[1]; })])
+                .domain([
+                    d3.min(channels, function (d) {
+                        return d3.min(d.values, yValue)
+                    }),
+                    d3.max(channels, function (d) {
+                        return d3.max(d.values, yValue)
+                    })
+                ])
                 .range([height - margin.top - margin.bottom, 0]);
 
-            // Select the svg element, if it exists.
-            var svg = d3.select(this).selectAll("svg").data([data]);
 
-            // Otherwise, create the skeletal chart.
-            var gEnter = svg.enter().append("svg").append("g");
-            gEnter.append("path").attr("class", "area");
-            gEnter.append("path").attr("class", "line");
+            // Select the svg element, if it exists.
+            svg = d3.select(this).selectAll("svg").data(channels);
+
+            // ENTER STATE  - otherwise, create skeletal
+            gEnter = svg.enter()
+                .append("svg")
+                .append("g");
+
+            gEnter.append("g").attr("class", "channels")
+                .append("path").attr("class", "line");
             gEnter.append("g").attr("class", "x axis");
             gEnter.append("g").attr("class", "y axis");
 
-            // Update the outer dimensions.
-            svg .attr("width", width)
+            // UPDATE STATE
+
+            //upate outer dimensions
+            svg.attr("width", width)
                 .attr("height", height);
 
-            // Update the inner dimensions.
-            var g = svg.select("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            //update inner dimensions
+            g = svg.select("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            //update line path
+            g.selectAll(".line")
+                .attr("d", function(d) { return line(d.values);})
+                .style("stroke", function(d) { return color(d.name); });
 
-            // Update the line path.
-            g.select(".line")
-                .attr("d", line);
-
-            // Update the x-axis.
+            //update x-axes
             g.select(".x.axis")
                 .attr("transform", "translate(0," + yScale.range()[0] + ")")
                 .call(xAxis);
 
-            //draw y-Axis
             g.select(".y.axis")
-                .call(yAxis)
-
+                .call(yAxis);
         });
     }
 
     // The x-accessor for the path generator; xScale ∘ xValue.
     function X(d) {
-        return xScale(d[0]);
+
+        return xScale(d.date);
     }
 
     // The x-accessor for the path generator; yScale ∘ yValue.
     function Y(d) {
-        return yScale(d[1]);
+        return yScale(+d.column);
     }
 
-    function xScale(){
+    chart.width = function(){
+        return width;
+    }
+
+    chart.height = function(){
+        return height;
+    }
+
+    chart.xScale = function(){
         return xScale;
     }
 
-    function yScale(){
+    chart.yScale = function(){
         return yScale;
+    }
+
+
+    chart.xAxis = function(){
+        return xAxis;
+    }
+
+    chart.yAxis = function(){
+        return yAxis;
+    }
+
+    chart.g = function(){
+        return g;
     }
 
     chart.margin = function(_) {
@@ -120,6 +153,53 @@ function TimeSeriesView() {
         return chart;
     }
 
+    chart.line = function(){
+        return line;
+    }
+
+    chart.svg = function(){
+        return svg;
+    }
+
+    chart.lineWrapper = function(){
+        return lineWrapper;
+    }
+
+    chart.gEnter = function(){
+        return gEnter;
+    }
+
+    chart.update = function(){
+
+    }
+
+    chart.addColumn = function(column){
+
+        d3.json(serverUrl+"/get-data?column="+column.name, function(error, json) {
+            if (error) return console.warn(error);
+            channels.push(json.columns[0]);
+
+            xScale
+                .domain(d3.extent(channels[0].values, xValue))
+
+            yScale.domain([
+                d3.min(channels, function (d) {
+                    return d3.min(d.values, yValue)
+                }),
+                d3.max(channels, function (d) {
+                    return d3.max(d.values, yValue)
+                })
+            ]);
+
+            g.selectAll(".line")
+                .data(channels)
+                .enter()
+                .append("path")
+                .attr("class", "line")
+                .attr("d", function(d) { return line(d.values);})
+                .style("stroke", function(d) { return color(d.name); });
+        })
+    }
 
     return chart;
 }

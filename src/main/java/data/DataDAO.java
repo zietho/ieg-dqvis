@@ -4,7 +4,6 @@ import core.Schema;
 import core.TemporalColumn;
 import core.TemporalData;
 import timeBench.data.GranularityAggregationTree;
-import timeBench.data.TemporalDataset;
 
 public interface DataDAO{
 
@@ -45,7 +44,12 @@ public interface DataDAO{
      *
      * @return
      */
-    public GranularityAggregationTree aggregate();
+    public Object aggregate();
+
+
+    public TemporalColumn readAggregated(String column, int granularityDepth);
+
+    public TemporalData readAggregated(int granularityDepth);
 
     /**
      *
@@ -54,4 +58,12 @@ public interface DataDAO{
     public Schema getColumnNames();
 
     public Object getDataset();
+
+    public void setDataset(Object dataset);
+
+    public Object getAggregatedDataset();
+
+    public void setAggregatedDataset(Object aggregatedDataset);
+
+
 }

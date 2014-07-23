@@ -2,9 +2,7 @@ package core;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -12,11 +10,16 @@ import java.util.List;
  */
 public class TemporalColumn {
     String name;
-    List<TemporalValue> column;
+    List<TemporalValue> values;
 
     public TemporalColumn(){
-        this.column = new ArrayList<TemporalValue>();
+        this.values = new ArrayList<TemporalValue>();
         //desirialize by json
+    }
+
+    public TemporalColumn(String name){
+        this();
+        this.name=name;
     }
 
     @JsonProperty
@@ -29,16 +32,17 @@ public class TemporalColumn {
     }
 
     @JsonProperty
-    public List<TemporalValue> getColumn() {
-        return column;
+    public List<TemporalValue> getValues() {
+        return values;
     }
 
-    public void setColumn(List<TemporalValue> column) {
-        this.column = column;
+    public void setValues(List<TemporalValue> values) {
+        this.values = values;
     }
+
 
     public void add(TemporalValue temporalValue){
-        column.add(temporalValue);
+        values.add(temporalValue);
     }
 }
 

@@ -1,24 +1,35 @@
 package core;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.hibernate.validator.constraints.Length;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TemporalData {
-    private List<TemporalColumn> data = new ArrayList<TemporalColumn>();
+    private List<TemporalColumn> columns = new ArrayList<TemporalColumn>();
 
     public TemporalData() {
         // Jackson deserialization
     }
 
     @JsonProperty
-    public List<TemporalColumn> getData() {
-        return data;
+    public List<TemporalColumn> getColumns() {
+        return columns;
     }
 
     public void add(TemporalColumn dc){
-        data.add(dc);
+        columns.add(dc);
     }
+
+//    @JsonProperty
+//    public TemporalColumn getColumn(String column){
+//        for (int i = 0; i < columns.size(); i++) {
+//            TemporalColumn temporalColumn = columns.get(i);
+//            if (temporalColumn.equals(column)) {
+//                return temporalColumn;
+//            }
+//        }
+//
+//        return new TemporalColumn();
+//    }
 }

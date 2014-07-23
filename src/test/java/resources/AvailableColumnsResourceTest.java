@@ -2,9 +2,11 @@ package resources;
 
 import com.sun.jersey.api.client.WebResource;
 import data.CsvDAO;
-import data.DataDAO;
+import io.dropwizard.logging.LoggingFactory;
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import timeBench.data.TemporalDataset;
 
 import static org.junit.Assert.*;
@@ -17,7 +19,7 @@ public class AvailableColumnsResourceTest {
     public static TemporalDataset tmpds = null;
 
     @Rule
-    public ResourceTestRule resources = ResourceTestRule.builder().addResource(new AvailableColumnsResource(new CsvDAO("src/test/resources/data/test.csv","src/test/resources/data/test.xml")))
+    public ResourceTestRule resources = ResourceTestRule.builder().addResource(new AvailableColumnsResource(CsvDAO.getInstance("src/test/resources/data/test.csv", "src/test/resources/data/test.xml")))
             .build();
 
     @BeforeClass
@@ -29,6 +31,7 @@ public class AvailableColumnsResourceTest {
     public void testGetAvailableColumnsShouldReturnAllColumnsFromSchema(){
         WebResource webResource = resources.client().resource("/get-available-columns");
         String responseMessage = webResource.get(String.class);
+        //logger.debug(responseMessage);
         assertTrue(responseMessage.contains("h"));
     }
 
