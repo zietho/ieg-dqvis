@@ -1,34 +1,28 @@
 package data;
 
 import core.TemporalData;
-import ieg.prefuse.data.ParentChildNode;
+import org.junit.Before;
 import org.junit.Test;
-import prefuse.data.Graph;
-import prefuse.data.Node;
-import prefuse.data.Table;
-import prefuse.data.Tuple;
-import prefuse.data.expression.ColumnExpression;
-import prefuse.data.expression.ComparisonPredicate;
-import prefuse.data.expression.NumericLiteral;
-import prefuse.data.expression.Predicate;
-import prefuse.data.tuple.TupleSet;
-import timeBench.data.*;
+import timeBench.data.GranularityAggregationTree;
+import timeBench.data.TemporalDataset;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 public class DataDAOTest {
     public DataDAO dataDAO;
+    private String data;
+    private String spec;
+
+    @Before
+    public void initialize() {
+        //set paths for data
+        data = "src/test/resources/data/test.csv";
+        spec = "src/test/resources/data/test.xml";
+        dataDAO = CsvDAO.getInstance(data, spec);
+    }
 
     @Test
     public void testReadDataShouldReturnTemporalDataset() throws Exception {
-        //set paths for data
-        final String data = "src/test/resources/data/test.csv";
-        final String spec = "src/test/resources/data/test.xml";
-        dataDAO = CsvDAO.getInstance(data, spec);
         TemporalDataset temporalDataset = (TemporalDataset) dataDAO.getDataset();
         assertTrue(temporalDataset != null);
         assertTrue(temporalDataset.getTemporalObjectTable().getRowCount() > 0);

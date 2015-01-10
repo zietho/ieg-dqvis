@@ -1,17 +1,12 @@
 package resources;
 
-import com.codahale.metrics.annotation.Timed;
-import com.google.common.base.Optional;
-import core.TemporalData;
+import app.Application;
 import data.DataDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import timeBench.data.TemporalDataset;
 
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 
@@ -20,7 +15,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/get-timeslider-indices")
 @Produces(MediaType.APPLICATION_JSON)
-public class TimesliderIndexResource {
+public class TimesliderIndexResource extends Application {
     final Logger logger = LoggerFactory.getLogger(TemporalDataResource.class);
     private DataDAO dataDAO;
 

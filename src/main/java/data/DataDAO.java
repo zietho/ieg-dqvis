@@ -3,10 +3,8 @@ package data;
 import core.Schema;
 import core.TemporalColumn;
 import core.TemporalData;
-import timeBench.data.GranularityAggregationTree;
 
 public interface DataDAO{
-
 
     /**
      * Method to read the data source without params
@@ -46,7 +44,6 @@ public interface DataDAO{
      */
     public Object aggregate();
 
-
     public TemporalColumn readAggregated(String column, int granularityDepth);
 
     public TemporalData readAggregated(int granularityDepth);
@@ -64,6 +61,4 @@ public interface DataDAO{
     public Object getAggregatedDataset();
 
     public void setAggregatedDataset(Object aggregatedDataset);
-
-
 }

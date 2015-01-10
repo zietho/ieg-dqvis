@@ -1,13 +1,11 @@
 package app;
 
-
 import data.CsvDAO;
 import data.DataDAO;
-import io.dropwizard.Configuration;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import resources.AvailableColumnsResource;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import resources.AvailableColumnsResource;
 import resources.TemporalDataResource;
 import resources.TimesliderIndexResource;
 
@@ -19,7 +17,6 @@ public class Application extends io.dropwizard.Application<ApplicationConfigurat
         new Application().run(args);
     }
     private DataDAO dataDAO;
-
 
     @Override
     public String getName() {
@@ -49,6 +46,4 @@ public class Application extends io.dropwizard.Application<ApplicationConfigurat
         environment.servlets().setInitParameter("allowedHeaders", "X-Requested-With,Content-Type,Accept,Origin,Access-Control-Request-Method,Authorization,Access-Control-Request-Method");
         environment.servlets().setInitParameter("allowedMethods", "OPTIONS,GET,PUT,POST,DELETE,HEAD");
     }
-
 }
-

@@ -26,7 +26,6 @@ import timeBench.data.*;
 import timeBench.data.io.TextTableTemporalDatasetReader;
 import timeBench.data.io.schema.TemporalDataColumnSpecification;
 
-import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -56,7 +55,7 @@ public class CsvDAO implements DataDAO{
         this.dataset = this.readData(dataPath, dataSpecPath);
         this.datasetSchema = this.dataset.getDataColumnSchema();
         //TODO fix bug with current test data
-        //this.aggregatedDataset = this.aggregate();
+        this.aggregatedDataset = this.aggregate();
     }
 
     public TemporalDataset readData(){

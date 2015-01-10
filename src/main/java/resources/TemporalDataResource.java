@@ -2,20 +2,18 @@ package resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
-import core.TemporalColumn;
 import core.TemporalData;
 import data.DataDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import prefuse.data.column.Column;
 import timeBench.data.TemporalDataset;
+
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 /**
  * Created by evolution on 10/07/2014.

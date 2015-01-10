@@ -7,12 +7,20 @@
     <artifactId>ieg-dqvis</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
-        <dropwizard.version>0.7.0</dropwizard.version>
+        <dropwizard.version>0.7.1</dropwizard.version>
         <jetty.version>9.0.7.v20131107</jetty.version>
         <!-- use UTF-8 for everything -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>git-zietho</id>
+            <name>zietho's Git based repo</name>
+            <url>https://github.com/zietho/mvn/raw/master/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -31,17 +39,12 @@
             <version>${jetty.version}</version>
 
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.7</version>
-        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.11</version>
             <scope>test</scope>
-
         </dependency>
         <dependency>
             <!-- needs extra dependencies: objenesis & hamcrest -->
@@ -50,6 +53,18 @@
             <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>ieg</groupId>
+            <artifactId>timebench</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.0</version>
+        </dependency>
+
     </dependencies>
 
 
