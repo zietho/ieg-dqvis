@@ -9,6 +9,7 @@ function QualityBarView() {
         selection.each(function(data) {
             //TODO - workaround - also make it available for multiple channels;
             var rawData =  data;
+            //
 
 
             // Convert data to standard representation greedily;
