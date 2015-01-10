@@ -26,7 +26,6 @@ public class TemporalDataResource {
     private DataDAO dataDAO;
 
     public TemporalDataResource(DataDAO dataDAO){
-
         this.dataDAO = dataDAO;
         //this.dataDAO.aggregate();
     }

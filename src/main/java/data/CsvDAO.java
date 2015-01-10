@@ -33,7 +33,7 @@ import java.util.Iterator;
  */
 public class CsvDAO implements DataDAO{
     private static CsvDAO instance = null;
-    final Logger logger = LoggerFactory.getLogger(DataDAO.class);
+    final Logger logger = LoggerFactory.getLogger(CsvDAO.class);
     private String dataPath = "";
     private String dataSpecPath = "";
     private TemporalDataset dataset;
@@ -55,7 +55,7 @@ public class CsvDAO implements DataDAO{
         this.dataset = this.readData(dataPath, dataSpecPath);
         this.datasetSchema = this.dataset.getDataColumnSchema();
         //TODO fix bug with current test data
-        this.aggregatedDataset = this.aggregate();
+        //this.aggregatedDataset = this.aggregate();
     }
 
     public TemporalDataset readData(){

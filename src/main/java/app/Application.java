@@ -2,6 +2,7 @@ package app;
 
 import data.CsvDAO;
 import data.DataDAO;
+import healthcheck.TemplateHealthCheck;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -13,10 +14,11 @@ import javax.servlet.DispatcherType;
 import java.util.EnumSet;
 
 public class Application extends io.dropwizard.Application<ApplicationConfiguration> {
+    private DataDAO dataDAO;
+
     public static void main(String[] args) throws Exception {
         new Application().run(args);
     }
-    private DataDAO dataDAO;
 
     @Override
     public String getName() {
@@ -37,6 +39,8 @@ public class Application extends io.dropwizard.Application<ApplicationConfigurat
         final AvailableColumnsResource availableColumnsResource = new AvailableColumnsResource(dataDAO);
         final TimesliderIndexResource timesliderIndexResource = new TimesliderIndexResource(dataDAO);
 
+        final TemplateHealthCheck healthCheck = new TemplateHealthCheck(configuration.getTemplate());
+        environment.healthChecks().register("template", healthCheck);
         environment.jersey().register(temporalDataResource);
         environment.jersey().register(availableColumnsResource);
         environment.jersey().register(timesliderIndexResource);
