@@ -86,81 +86,9 @@
 <h1 id="columnHeader">Available Columns</h1>
 <ul id="columns"></ul>
 <div id="slider"></div>
-<script src="/d3/d3.js"></script>
-<script src="/js/jquery.js"></script>
-<script src="/js/jquery-ui.min.js"></script>
-<script src="/js/jquery-draggableslider.js"></script>
-<script src="/js/timeseriesview.js"></script>
-<script src="/js/qualitybarview.js"></script>
-<script src="/js/timesliderview.js"></script>
-<script src="/js/columnsview.js"></script>
-<script>
 
-    //global vars
-   var serverUrl = "http://localhost:8080",
-       column = "w";
+<script data-main="app" src="scripts/lib/require.js"></script>
 
-    var qualityBarView = QualityBarView()
-                            .x(function(d) { return new Date(+d.date); })
-                            .y(function(d) { return +d.quality; })
-                            .height(100)
-                            .margin({top: 0,right: 80, bottom: 30, left: 50})
-
-    var timeSeriesView = TimeSeriesView()
-            .x(function(d) { return new Date(+d.date); })
-            .y(function(d) { return +d.column; })
-            .height(500)
-            .width(800)
-            .margin({top: 120,right: 0, bottom: 20, left: 50})
-            .column(column);
-
-    var timeSliderView = TimeSliderView()
-                            .width(timeSeriesView.width)
-                            .timeSeriesView(timeSeriesView)
-                            .sliderId("#slider");
-
-    var columnsView = ColumnsView()
-                        .height(500)
-                        .margin({top:120, right:80, bottom:30, left:50})
-                        .timeSeriesView(timeSeriesView);
-
-    //get data
-    d3.json(serverUrl+"/get-data?column="+column, function(error, json) {
-        if (error) return console.warn(error);
-        var data = d3.select("#visualization")
-          .datum(json.columns);
-          data.call(timeSeriesView);
-
-        d3.select("#visualization")
-          .datum(json.columns[0].values)
-          .call(qualityBarView);
-
-        d3.select("#visualization")
-          .datum(json.columns[0].values)
-          .call(timeSliderView);
-
-
-
-
-    })
-
-    d3.json(serverUrl+"/get-available-columns", function(error, json) {
-        if (error) return console.warn(error);
-
-        var columns = d3.select("#columns")
-        .datum(json)
-        columns.call(columnsView);
-
-    })
-
-
-
-</script>
-</div>
-
-
-
-</script>
 </body>
 </html>
 
