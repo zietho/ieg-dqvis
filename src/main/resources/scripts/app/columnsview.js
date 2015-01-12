@@ -1,4 +1,4 @@
-function ColumnsView(){
+define(['d3'],function(d3) {
 
     var margin= {top: 20,right: 80, bottom: 30, left: 50},
         width =  960 - margin.left - margin.right,
@@ -58,4 +58,4 @@ function ColumnsView(){
 
     return chart;
 
-}
+});

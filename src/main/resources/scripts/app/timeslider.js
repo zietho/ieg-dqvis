@@ -1,4 +1,4 @@
-function TimeSliderView() {
+define(['d3','jquery','jquery-ui.min', 'jquery-draggableslider'],function(d3,$,jqui,jqds) {
     var width = 200,
         timeSeriesGraph = undefined,
         sliderId = undefined;
@@ -64,4 +64,4 @@ function TimeSliderView() {
     }
 
     return chart;
-}
+});

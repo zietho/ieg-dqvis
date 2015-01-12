@@ -1,20 +1,26 @@
-/**
- * Created by evolution on 17/07/2014.
- */
-function QualityBarView() {
-    var margin= {top: 20,right: 80, bottom: 30, left: 50},
-        width =  960 - margin.left - margin.right,
+//function QualityBarView() {
+define(['d3'],function(d3) {
+    var margin = {top: 20, right: 80, bottom: 30, left: 50},
+        width = 960 - margin.left - margin.right,
         height = 100 - margin.top - margin.bottom,
-        xValue = function(d) { return d[0]; },
-        yValue = function(d) { return d[1]; };
+        xValue = function (d) {
+            return d[0];
+        },
+        yValue = function (d) {
+            return d[1];
+        };
 
     function chart(selection) {
-        selection.each(function(data) {
-            var rawData = data
-            console.log(rawData)
+        selection.each(function (data) {
+            //TODO - workaround - also make it available for multiple channels;
+            var rawData = data;
+            //
+
+
             // Convert data to standard representation greedily;
             // this is needed for nondeterministic accessors.
-            data = data.map(function(d, i) {
+
+            data = data.map(function (d, i) {
                 return [xValue.call(data, d, i), yValue.call(data, d, i)];
             });
 
@@ -26,21 +32,22 @@ function QualityBarView() {
                 .attr("x", 0)
                 .attr("y", 0)
                 .attr("width", width)
-                .attr("height",100);
+                .attr("height", 100);
 
             g.selectAll("rect")
                 .data(rawData)
                 .enter()
                 .append("rect")
-                .attr("x", function(d,i){
+                .attr("x", function (d, i) {
                     return i * (width / data.length);
                 })
                 .attr("y", 0)
-                .attr("width", function(d,i){
-                    return width/data.length;
+                .attr("width", function (d, i) {
+                    return width / data.length;
                 })
-                .attr("height",100)
-                .attr("fill", function(d){
+                .attr("height", 100)
+                .attr("fill", function (d) {
+
                     return "rgb(0, 0, " + (d.quality * 100) + ")";
                 })
 
@@ -57,35 +64,35 @@ function QualityBarView() {
         return yScale(d[1]);
     }
 
-    chart.margin = function(_) {
+    chart.margin = function (_) {
         if (!arguments.length) return margin;
         margin = _;
         return chart;
     };
 
-    chart.width = function(_) {
+    chart.width = function (_) {
         if (!arguments.length) return width;
         width = _;
         return chart;
     };
 
-    chart.height = function(_) {
+    chart.height = function (_) {
         if (!arguments.length) return height;
         height = _;
         return chart;
     };
 
-    chart.x = function(_) {
+    chart.x = function (_) {
         if (!arguments.length) return xValue;
         xValue = _;
         return chart;
     };
 
-    chart.y = function(_) {
+    chart.y = function (_) {
         if (!arguments.length) return yValue;
         yValue = _;
         return chart;
     };
 
     return chart;
-}
+});
