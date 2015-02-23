@@ -7,14 +7,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class TemporalValue {
     private long date;
-    private String column;
-    private int quality;
+    private double column;
+    private double quality;
 
     public TemporalValue(){
         //jackson
     }
 
-    public TemporalValue(long date, String column, int quality){
+    public TemporalValue(long date, double column, double quality){
         this.date = date;
         this.column = column;
         this.quality = quality;
@@ -26,12 +26,12 @@ public class TemporalValue {
     }
 
     @JsonProperty
-    public String getColumn() {
+    public double getColumn() {
         return column;
     }
 
     @JsonProperty
-    public int getQuality() {
+    public double getQuality() {
         return quality;
     }
 }

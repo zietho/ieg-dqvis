@@ -1,7 +1,8 @@
 require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './app/columnsview'], function(d3,qv, dv,ts, cv) {
 
     var serverUrl = "http://localhost:8080",
-        column = "w";
+        column = "h",
+        granularity = 3;
 
     var qualityView = qv
         .x(function (d) {
@@ -36,7 +37,7 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
         .timeSeriesView(ts);
 
     //get data
-    d3.json(serverUrl + "/get-data?column=" + column, function (error, json) {
+    d3.json(serverUrl + "/get-data?column=" + column+"&granularity="+granularity, function (error, json) {
         if (error) return console.warn(error);
         var data = d3.select("#visualization")
             .datum(json.columns);
@@ -47,7 +48,7 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
         d3.select("#visualization")
             .datum(json.columns[0].values)
             .call(timeSliderView);
-    })
+    });
     d3.json(serverUrl + "/get-available-columns", function (error, json) {
         if (error) return console.warn(error);
         var columns = d3.select("#columns")

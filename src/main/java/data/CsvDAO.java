@@ -3,6 +3,7 @@ package data;
 /**
  * Created by evolution on 16/07/2014.
  */
+
 import core.TemporalColumn;
 import core.TemporalData;
 import core.TemporalValue;
@@ -84,7 +85,7 @@ public class CsvDAO implements DataDAO{
         Schema schema = dataset.getDataColumnSchema();
 
         for(int i=0; i<schema.getColumnCount(); i++){
-            temporalData.add(this.read(schema.getColumnName(i)));
+            temporalData.add(this.read(this.datasetSchema.getColumnName(i)));
         }
 
         return temporalData;
@@ -104,20 +105,20 @@ public class CsvDAO implements DataDAO{
     }
 
     public TemporalColumn readTimeSlice(int fromIndex, int toIndex, String column){
-        TemporalColumn temporalColumn = new TemporalColumn();
-        temporalColumn.setName(column);
-        Table table = dataset.getTemporalObjectTable();
+        TemporalColumn temporalColumn = new TemporalColumn(column);
         TemporalElementStore temporalElementStore = dataset.getTemporalElements();
 
         if(column != null && !column.equals("")){
+            Table table = dataset.getTemporalObjectTable();
+
             //first get the column and convert it to an array list
             Column dataColumn = table.getColumn(column);
             Column missingDataColumn = table.getColumn(column+".MissingData");
             Column invalidDataColumn = table.getColumn(column+".InvalidData");
 
             for(int i=0; i<dataColumn.getRowCount(); i++){
-                String dataValue = dataColumn.getString(i);
-                int qualityValue =0;
+                double dataValue = dataColumn.getDouble(i);
+                double qualityValue =0;
                 if(missingDataColumn != null && invalidDataColumn != null){
                     qualityValue = (missingDataColumn.get(i)==1 || invalidDataColumn.get(i)==1) ? 1 : 0;
                 }
@@ -172,21 +173,34 @@ public class CsvDAO implements DataDAO{
                                     );
 
         TemporalColumn temporalColumn = new TemporalColumn(column);
-        int id, missing, invalid, quality;
-        String mean;
+        int id;
+        double missing, invalid, quality, missingTimestamp, mean;
         long date;
 
         //TODO - unsorted!*/
-        while(iterator.hasNext()){
+        while(iterator.hasNext()) {
             id = iterator.next();
+//            logger.info("" +id);
+
             TemporalObject temporalObject = aggregatedDataset.getTemporalObject(id);
+
             GenericTemporalElement temporalElement = aggregatedDataset.getTemporalElement(id);
 
-            mean = temporalObject.getString(column);
+            mean = temporalObject.getDouble(column);
+//            logger.info("double value is: "+temporalObject.getDouble(column));
+//           logger.info("granularity id / depth:"+temporalElement.getGranularityId()     +"/"+temporalElement.getDepth());
+//
+//            logger.info("inf: "+new Date(temporalElement.getInf()));
+//            logger.info("sup: "+new Date(temporalElement.getSup()));
             missing = temporalObject.getInt(column + ".MissingData");
             invalid = temporalObject.getInt(column + ".InvalidData");
+            missingTimestamp = temporalObject.getDouble("MissingTimeStamp");
+//            logger.info("kind: "+temporalObject.getDouble("MissingTimeStamp"));            logger.info("double? "+temporalObject.get("MissingTimeStamp"));
+//            logger.info("missing: "+missing+" invalid: "+invalid+" missing ts: "+missingTimestamp);
+//
+
             date = (temporalElement.getInf() == temporalElement.getSup()) ? temporalElement.getInf() : 0;
-            quality = (missing == 1 || invalid == 1) ? 1 : 0;
+            quality = (missing == 1.0 || invalid == 1) ? 1.0 : 0.0;
 
             TemporalValue temporalValue = new TemporalValue(date, mean, quality);
             temporalColumn.add(temporalValue);

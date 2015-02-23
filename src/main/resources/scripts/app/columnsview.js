@@ -22,13 +22,8 @@ define(['d3'],function(d3) {
                 .text(function(d){ return d.name})
                 .on("click", function(d){
                     timeSeriesView.addColumn(d);
-
                 })
-
-
         });
-
-
     }
 
     chart.timeSeriesView = function(_){
@@ -49,7 +44,6 @@ define(['d3'],function(d3) {
         return chart;
     };
 
-
     chart.height = function(_) {
         if (!arguments.length) return height;
         height = _;
@@ -57,5 +51,4 @@ define(['d3'],function(d3) {
     };
 
     return chart;
-
 });
