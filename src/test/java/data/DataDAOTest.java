@@ -133,7 +133,6 @@ public abstract class DataDAOTest {
         TemporalColumn temporalColumn = dataDAO.readAggregated("h", 0);
         logger.info("size: "+temporalColumn.getValues().size());
         assertTrue(temporalColumn.getValues().size()==1);
-
     }
 
 
