@@ -12,7 +12,7 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
         .height(100)
         .margin({top: 0, right: 80, bottom: 30, left: 50});
 
-    /*var detailView = dv
+    var detailView = dv
         .x(function (d) {
             return new Date(+d.date);
         })
@@ -24,7 +24,7 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
         .margin({top: 120, right: 0, bottom: 20, left: 50})
         .column(column);
 
-
+    /*
     var timeSliderView = ts
         .width(dv.width)
         .timeSeriesView(dv)
