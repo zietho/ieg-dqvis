@@ -3,6 +3,7 @@ package resources;
 import app.Application;
 import app.ApplicationConfiguration;
 import core.TemporalData;
+import core.TemporalValue;
 import data.CsvDAO;
 import io.dropwizard.testing.junit.DropwizardAppRule;
 import io.dropwizard.testing.junit.ResourceTestRule;
@@ -10,6 +11,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
@@ -76,6 +79,30 @@ public class TemporalDataResourceTest {
 
         assertTrue(temporalData.getColumns().get(0).getValues().get(0).getColumn() == 2.75);
     }
+
+    @Test
+    public void testSingleQualityHWithTop(){
+        TemporalData temporalData = resources.client().resource("/get-data?column=h&granularity=top").get(TemporalData.class);
+        assertTrue(temporalData.getColumns().get(0).getValues().get(0).getQuality()==0);
+    }
+
+    @Test
+    public void testSingleQualityOfHWithMinutes(){
+        TemporalData temporalData = resources.client().resource("/get-data?column=h&granularity=day").get(TemporalData.class);
+        List<TemporalValue> values = temporalData.getColumns().get(0).getValues();
+        for(int i=0; i<values.size(); i++) {
+            assertTrue(values.get(i).getQuality() == 0);
+        }
+    }
+
+    @Test
+    public void testSingleQualityOf(){
+        TemporalData temporalData = resources.client().resource("/get-data?column=w&granularity=top").get(TemporalData.class);
+        logger.info("quality ISSSS: "+temporalData.getColumns().get(0).getValues().get(0).getQuality());
+        assertTrue(temporalData.getColumns().get(0).getValues().get(0).getQuality() ==   0.35416666666666663);
+
+    }
+
 
     @Test
     public void testReadAllWithGranularity() {

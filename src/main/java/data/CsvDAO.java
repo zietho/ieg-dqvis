@@ -180,26 +180,23 @@ public class CsvDAO implements DataDAO{
 
         //TODO - unsorted!*/
         while(iterator.hasNext()) {
+            //retrieve temporal element - IN
             id = iterator.next();
-
             TemporalObject temporalObject = aggregatedDataset.getTemporalObject(id);
             GenericTemporalElement temporalElement = aggregatedDataset.getTemporalElement(id);
 
+            //calculate quality - TRANSFORM
             mean = temporalObject.getDouble(column);
-            missing = temporalObject.getInt(column + ".MissingData");
-            invalid = temporalObject.getInt(column + ".InvalidData");
-            missingTimestamp = temporalObject.getDouble("MissingTimeStamp");
-
+            missing = temporalObject.getDouble(column + ".MissingData");
+            invalid = temporalObject.getDouble(column + ".InvalidData");
+            quality = (missing+invalid)/2;
+            logger.info("missing: "+missing);
+            logger.info("missing: "+invalid);
+            logger.info("single quality: "+quality);
             date = (temporalElement.getInf() == temporalElement.getSup()) ? temporalElement.getInf() : 0;
 
-            //TODO - improve quality calculation! now its is simple and without weights
-            quality = 0;
-            quality = (missing == 1) ? quality+(1/3) : quality;
-            quality = (invalid == 1) ? quality+(1/3) : quality;
-            quality = (missingTimestamp == 1) ? quality+(1/3) : quality;
-
-            TemporalValue temporalValue = new TemporalValue(date, mean, quality);
-            temporalColumn.add(temporalValue);
+            //save into new tempral object - OUTPUT
+            temporalColumn.add(new TemporalValue(date, mean, quality));
         }
 
         return  temporalColumn;
