@@ -22,9 +22,9 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
         .height(500)
         .width(800)
         .margin({top: 120, right: 0, bottom: 20, left: 50})
-        .column(column);
+        .column("h");
 
-    /*
+
     var timeSliderView = ts
         .width(dv.width)
         .timeSeriesView(dv)
@@ -34,7 +34,7 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
         .height(500)
         .margin({top: 120, right: 80, bottom: 30, left: 50})
         .timeSeriesView(ts);
-     */
+
 
     //get data
     d3.json(serverUrl + "/get-data?granularity=minute", function (error, json) {
@@ -50,13 +50,13 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
             .call(timeSliderView);
     });
 
-    /*
+
     d3.json(serverUrl + "/get-available-columns", function (error, json) {
         if (error) return console.warn(error);
         var columns = d3.select("#columns")
             .datum(json)
         columns.call(columnsView);
     });
-    */
+
 
 });
