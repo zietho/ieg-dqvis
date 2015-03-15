@@ -24,7 +24,6 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
         .margin({top: 120, right: 0, bottom: 20, left: 50})
         .column("h");
 
-
     var timeSliderView = ts
         .width(dv.width)
         .timeSeriesView(dv)

@@ -15,6 +15,22 @@ define(['d3','app/qualityview'], function(d3,qv) {
             expect(qualityView).not.toBeNull();
         })
     });
+    describe("createQualityView", function(){
+        it("to be false", function(){
+
+            var qualityView = qv
+                .x(function (d) {
+                    return new Date(+d.date);
+                })
+                .y(function (d) {
+                    return +d.quality;
+                })
+                .height(100)
+                .margin({top: 0, right: 80, bottom: 30, left: 50});
+
+            expect(qualityView).not.toBeNull();
+        })
+    });
 });
 
 
