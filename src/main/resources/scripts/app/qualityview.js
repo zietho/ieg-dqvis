@@ -16,10 +16,8 @@ define(['d3'],function(d3) {
             var rawData = data;
             //
 
-
             // Convert data to standard representation greedily;
             // this is needed for nondeterministic accessors.
-
             data = data.map(function (d, i) {
                 return [xValue.call(data, d, i), yValue.call(data, d, i)];
             });
@@ -48,7 +46,7 @@ define(['d3'],function(d3) {
                 .attr("height", 100)
                 .attr("fill", function (d) {
 
-                    return "rgb(0, 0, " + (d.quality * 100) + ")";
+                    return "rgb(25, 25, " + (d.quality * 100) + ")";
                 })
 
         });

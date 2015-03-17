@@ -36,7 +36,7 @@ require(['d3','./app/qualityview', './app/detailview', './app/timeslider', './ap
 
 
     //get data
-    d3.json(serverUrl + "/get-data?granularity=minute", function (error, json) {
+    d3.json(serverUrl + "/get-data?granularity=hour", function (error, json) {
         if (error) return console.warn(error);
         var data = d3.select("#visualization")
             .datum(json.columns);
