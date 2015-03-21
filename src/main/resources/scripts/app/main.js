@@ -1,5 +1,8 @@
-require(['d3','d3.chart','./app/qualityview', './app/detailview', './app/timeslider', './app/columnsview' ], function(d3, _$, qv, dv,ts, cv) {
+require(['d3','./app/qualityview'], function(d3,  qv) {
 
+    console.log(d3.version);
+    console.log("klj ");
+    var d3 = window.d3;
 
     var serverUrl = "http://localhost:8080";
 

@@ -8,17 +8,7 @@ requirejs.config({
     paths: {
         app: '../app'
     },
-
-    "shim": {
-        'd3': {
-            deps: ['jquery'],
-            exports: 'd3'
-        },
-        'd3.chart': {
-            deps: ['d3'],
-            exports: 'd3.chart'
-        }
-    }
+    
 });
 
 // Start loading the main app file. Put all of
