@@ -1,5 +1,6 @@
 require(['d3','d3.chart','./app/qualityview', './app/detailview', './app/timeslider', './app/columnsview' ], function(d3, _$, qv, dv,ts, cv) {
 
+
     var serverUrl = "http://localhost:8080";
 
 
