@@ -2,6 +2,7 @@ package resources;
 
 import app.Application;
 import app.ApplicationConfiguration;
+import core.TemporalColumn;
 import core.TemporalData;
 import core.TemporalValue;
 import data.CsvDAO;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -21,11 +23,8 @@ import static org.junit.Assert.assertTrue;
  */
 public class TemporalDataResourceTest {
     private static final Logger logger = LoggerFactory.getLogger(TemporalDataResourceTest.class);
-
-
     private static String data = "src/test/resources/data/test.csv";
     private static String spec = "src/test/resources/data/test.xml";
-
 
     @ClassRule
     public static final DropwizardAppRule<ApplicationConfiguration> RULE =
@@ -36,6 +35,9 @@ public class TemporalDataResourceTest {
             .addResource(new TemporalDataResource(CsvDAO.getInstance(data, spec)))
             .build();
 
+
+    //test calculations
+
     @Test
     public void testReadColumnWithGranularityMinutes() {
         TemporalData temporalData = resources.client().resource("/get-data?column=h&granularity=minute").get(TemporalData.class);
@@ -43,10 +45,10 @@ public class TemporalDataResourceTest {
         assertTrue(temporalData.getColumns().get(0).getValues().size()==4);
 
         //test individual aggregations on the minutes level
-        assertTrue(temporalData.getColumns().get(0).getValues().get(0).getColumn() == 1.5);
-        assertTrue(temporalData.getColumns().get(0).getValues().get(1).getColumn()==6);
+        assertTrue(temporalData.getColumns().get(0).getValues().get(0).getColumn()==1.5);
+        assertTrue(temporalData.getColumns().get(0).getValues().get(1).getColumn()==6.0);
         assertTrue(temporalData.getColumns().get(0).getValues().get(2).getColumn()==2.5);
-        assertTrue(temporalData.getColumns().get(0).getValues().get(3).getColumn()==1);
+        assertTrue(temporalData.getColumns().get(0).getValues().get(3).getColumn()==1.0);
 
     }
 
@@ -55,7 +57,6 @@ public class TemporalDataResourceTest {
         TemporalData temporalData = resources.client().resource("/get-data?column=h&granularity=hour").get(TemporalData.class);
         assertTrue(!temporalData.getColumns().isEmpty());
         assertTrue(temporalData.getColumns().get(0).getValues().size()==3);
-
         assertTrue(temporalData.getColumns().get(0).getValues().get(0).getColumn() == 3.75);
         assertTrue(temporalData.getColumns().get(0).getValues().get(1).getColumn() == 2.5);
         assertTrue(temporalData.getColumns().get(0).getValues().get(2).getColumn() == 1);
@@ -66,7 +67,6 @@ public class TemporalDataResourceTest {
         TemporalData temporalData = resources.client().resource("/get-data?column=h&granularity=day").get(TemporalData.class);
         assertTrue(!temporalData.getColumns().isEmpty());
         assertTrue(temporalData.getColumns().get(0).getValues().size()==2);
-
         assertTrue(temporalData.getColumns().get(0).getValues().get(0).getColumn() == 3.75);
         assertTrue(temporalData.getColumns().get(0).getValues().get(1).getColumn() == 1.75);
     }
@@ -76,33 +76,31 @@ public class TemporalDataResourceTest {
         TemporalData temporalData = resources.client().resource("/get-data?column=h&granularity=top").get(TemporalData.class);
         assertTrue(!temporalData.getColumns().isEmpty());
         assertTrue(temporalData.getColumns().get(0).getValues().size()==1);
-
         assertTrue(temporalData.getColumns().get(0).getValues().get(0).getColumn() == 2.75);
     }
 
     @Test
     public void testSingleQualityHWithTop(){
         TemporalData temporalData = resources.client().resource("/get-data?column=h&granularity=top").get(TemporalData.class);
-        assertTrue(temporalData.getColumns().get(0).getValues().get(0).getQuality()==0);
+        assertTrue(temporalData.getColumns().get(0).getValues().get(0).getQuality()==0.13888888888888887);
     }
 
     @Test
     public void testSingleQualityOfHWithMinutes(){
-        TemporalData temporalData = resources.client().resource("/get-data?column=h&granularity=day").get(TemporalData.class);
+        TemporalData temporalData = resources.client().resource("/get-data?column=w&granularity=minutes").get(TemporalData.class);
         List<TemporalValue> values = temporalData.getColumns().get(0).getValues();
-        for(int i=0; i<values.size(); i++) {
-            assertTrue(values.get(i).getQuality() == 0);
-        }
+        assertTrue(values.get(0).getQuality() == 0.16666666666666666);
+        assertTrue(values.get(1).getQuality() == 0.3333333333333333);
+        assertTrue(values.get(2).getQuality() == 0.3333333333333333);
+        assertTrue(values.get(3).getQuality() == 0.6666666666666666);
+
     }
 
     @Test
-    public void testSingleQualityOf(){
+    public void testSingleQualityOfWWithGranularityTop(){
         TemporalData temporalData = resources.client().resource("/get-data?column=w&granularity=top").get(TemporalData.class);
-        logger.info("quality ISSSS: "+temporalData.getColumns().get(0).getValues().get(0).getQuality());
-        assertTrue(temporalData.getColumns().get(0).getValues().get(0).getQuality() ==   0.35416666666666663);
-
+        assertTrue(temporalData.getColumns().get(0).getValues().get(0).getQuality() == 0.375);
     }
-
 
     @Test
     public void testReadAllWithGranularity() {
@@ -110,8 +108,25 @@ public class TemporalDataResourceTest {
         assertTrue(!temporalData.getColumns().isEmpty());
         assertTrue(temporalData.getColumns().get(0).getValues().size()==4);
         double qualityOfLast = temporalData.getColumns().get(0).getValues().get(3).getQuality();
-        logger.info("quality of last: "+qualityOfLast);
+        logger.debug("quality of last: "+qualityOfLast);
         assertTrue(qualityOfLast>0.37);
+    }
+
+    //@TODO: test with calculated values!
+    @Test
+    public void testReadSelectedWithGranularity() {
+        TemporalData temporalData = resources.client().resource("/get-data?column=w&column=h&column=p1&column=m2&granularity=minute").get(TemporalData.class);
+        assertTrue(!temporalData.getColumns().isEmpty());
+    }
+
+    //test whether elements are filled with values
+    @Test
+    public void testWhetherAllValuesAreSetWithSingleColumns(){
+        TemporalData temporalData = resources.client().resource("/get-data?column=w&granularity=minute").get(TemporalData.class);
+        for(TemporalColumn temporalColumn : temporalData.getColumns()) {
+            assertNotNull(temporalColumn.getValues().get(0).getColumn());
+
+        }
     }
 
 }

@@ -4,6 +4,8 @@ import core.Schema;
 import core.TemporalColumn;
 import core.TemporalData;
 
+import java.util.List;
+
 public interface DataDAO{
 
     /**
@@ -44,10 +46,11 @@ public interface DataDAO{
      */
     public Object aggregate();
 
-    public TemporalColumn readAggregated(String column, int granularityDepth);
+    public TemporalColumn readAggregated(String column, int granularity);
 
-    public TemporalColumn readAggregated(int granularityDepth);
+    public TemporalColumn readAggregated(int granularity);
 
+    public TemporalColumn readAggregated(List<String> columns, int granularity);
     /**
      *
      * @return

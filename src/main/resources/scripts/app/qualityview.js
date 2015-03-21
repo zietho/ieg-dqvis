@@ -1,96 +1,95 @@
-//function QualityBarView() {
-define(['d3'],function(d3) {
-    var margin = {top: 20, right: 80, bottom: 30, left: 50},
-        width = 960 - margin.left - margin.right,
-        height = 100 - margin.top - margin.bottom,
-        xValue = function (d) {
-            return d[0];
-        },
-        yValue = function (d) {
-            return d[1];
-        };
+define(['d3', 'd3.chart'],function(d3, _$) {
+    d3.chart("QualityView", {
 
-    function chart(selection) {
-        selection.each(function (data) {
-            //TODO - workaround - also make it available for multiple channels;
-            var rawData = data;
-            //
 
-            // Convert data to standard representation greedily;
-            // this is needed for nondeterministic accessors.
-            data = data.map(function (d, i) {
-                return [xValue.call(data, d, i), yValue.call(data, d, i)];
+        initialize: function(){
+            var chart = this;
+
+
+            // initialize height and width from paren
+            chart.h = this.base.attr("height");
+            chart.w = this.base.attr("width");
+            chart.margin = {
+                top: 20,
+                right: 80,
+                bottom: 30,
+                left: 50
+            };
+
+            chart.base
+                .classed("QualityView", true);
+            chart.layers = {};
+
+
+            //init layers
+            chart.layers.box = chart.base.append("rect")
+                .classed("box", true)
+            chart.layers.qualityTicks = chart.base.append("g")
+                .classed("qualityTicks", true);
+
+
+            chart.layer("box", chart.layers.box, {
+                insert: function() {
+                    return this.attr("class", "line")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .attr("width", width)
+                        .attr("height", 100)
+                }
             });
 
-            // Select the svg element, if it exists.
-            var svg = d3.select(this).selectAll("svg")
-            var g = svg.append("g")
-            var dqbar = svg.append("rect")
-                .attr("class", "line")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", width)
-                .attr("height", 100);
+            chart.layer("qualityTicks", chart.layers.qualityTicks, {
+                dataBind: function(data){
+                    this.selectAll("rect")
+                        .data(chart.data);
+                },
+                insert: function(){
+                    return this.append('rect');
+                }
+            });
 
-            g.selectAll("rect")
-                .data(rawData)
-                .enter()
-                .append("rect")
-                .attr("x", function (d, i) {
-                    return i * (width / data.length);
-                })
-                .attr("y", 0)
-                .attr("width", function (d, i) {
-                    return width / data.length;
-                })
-                .attr("height", 100)
-                .attr("fill", function (d) {
+            var onEnter = function(){
+                this.append("rect")
+                    .attr("x", function (d, i) {
+                        return i * (width / data.length);
+                    })
+                    .attr("y", 0)
+                    .attr("width", function (d, i) {
+                        return width / data.length;
+                    })
+                    .attr("height", 100)
+                    .attr("fill", function (d) {
+                        var red = (d.quality * 255).toFixed(0);
+                        var green = (red + 25);
+                        var blue = 250;
 
-                    return "rgb(25, 25, " + (d.quality * 100) + ")";
-                })
+                        return "rgb(" + red + "," + green + "," + blue + ")";
+                    })
+            };
 
-        });
-    }
+            chart.layer(qualityTicks).on("update", onEnter);
+        },
 
-    // The x-accessor for the path generator; xScale ∘ xValue.
-    function X(d) {
-        return xScale(d[0]);
-    }
-
-    // The x-accessor for the path generator; yScale ∘ yValue.
-    function Y(d) {
-        return yScale(d[1]);
-    }
-
-    chart.margin = function (_) {
-        if (!arguments.length) return margin;
-        margin = _;
-        return chart;
-    };
-
-    chart.width = function (_) {
-        if (!arguments.length) return width;
-        width = _;
-        return chart;
-    };
-
-    chart.height = function (_) {
-        if (!arguments.length) return height;
-        height = _;
-        return chart;
-    };
-
-    chart.x = function (_) {
-        if (!arguments.length) return xValue;
-        xValue = _;
-        return chart;
-    };
-
-    chart.y = function (_) {
-        if (!arguments.length) return yValue;
-        yValue = _;
-        return chart;
-    };
-
-    return chart;
+        width: function(newWidth){
+            if(arguments.length===0){
+                return this.w;
+            }
+            this.w = new newWidth;
+            return this;
+        },
+        height: function(newHeight) {
+            if (arguments.length === 0) {
+                return this.h;
+            }
+            this.h = newHeight;
+            return this;
+        },
+        margin: function(newMargin){
+            if(arguments.legth ===0){
+                return this.margin;
+            }
+            this.margin = newMargin;
+            return this;
+        }
+    });
 });

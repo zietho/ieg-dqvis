@@ -8,11 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import timeBench.data.TemporalDataset;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 /**
  * Created by evolution on 10/07/2014.
@@ -31,29 +29,17 @@ public class TemporalDataResource {
 
     @GET
     @Timed
-    public TemporalData readData(@QueryParam("column") Optional<String> column, @QueryParam("granularity") Optional<String> granularity, @QueryParam("from") Optional<String> from, @QueryParam("to") Optional<String> to){
+    public TemporalData readData(@QueryParam("column") List<String> columns, @QueryParam("granularity") @DefaultValue("hour") String granularity, @QueryParam("from") Optional<String> from, @QueryParam("to") Optional<String> to){
         TemporalData temporalData = new TemporalData();
 
-        if(column.isPresent()) {
-            if(granularity.isPresent()) {
-                temporalData.add(dataDAO.readAggregated(column.get(), this.getLevel(granularity.get())));
-                return temporalData;
-            }
-
-            temporalData.add(dataDAO.read(column.or("h")));
+        if(columns!=null && !columns.isEmpty()) {
+            temporalData.add(dataDAO.readAggregated(columns, this.getLevel(granularity)));
             return temporalData;
-        }else{
-            if(granularity.isPresent()) {
-                temporalData.add(dataDAO.readAggregated(this.getLevel(granularity.get())));
-                return temporalData;
-            }
-
-            temporalData.add(dataDAO.readAggregated(3));
+        }else {
+            temporalData.add(dataDAO.readAggregated(this.getLevel(granularity)));
             return temporalData;
         }
     }
-
-
 
     private int getLevel(String granularity){
         switch(granularity){

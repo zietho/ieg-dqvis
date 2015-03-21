@@ -1,205 +1,95 @@
-define(['d3'],function(d3) {
-    var margin= {top: 20,right: 80, bottom: 30, left: 50},
-        width =  960,
-        height = 500,
-        xValue = undefined,
-        yValue = undefined,
-        xScale = d3.time.scale(),
-        yScale = d3.scale.linear(),
-        xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickSize(6, 0),
-        yAxis = d3.svg.axis().scale(yScale).orient("left"),
-        line = d3.svg.line().x(X).y(Y),
-        lineWrapper = function(d) { return line(d.values);}
-        svg = undefined;
-        gEnter = undefined;
-        g = undefined;
-        color =  d3.scale.category10(),
-        channels = new Array();
+define(['d3', 'd3.chart'],function(d3, _$) {
+   d3.chart("QualityView", {
 
 
-    function chart(selection) {
-
-        selection.each(function(json) {
-            channels.push(json[0]);
-
-            // Update the x-scale.
-            xScale
-                .domain(d3.extent(channels[0].values, xValue))
-                .range([0, width - margin.left - margin.right]);
-
-            // Update the y-scale.
-            yScale
-                .domain([
-                    d3.min(channels, function (d) {
-                        return d3.min(d.values, yValue)
-                    }),
-                    d3.max(channels, function (d) {
-                        return d3.max(d.values, yValue)
-                    })
-                ])
-                .range([height - margin.top - margin.bottom, 0]);
+       initialize: function(){
+           var chart = this;
 
 
-            // Select the svg element, if it exists.
-            svg = d3.select(this).selectAll("svg").data(channels);
+           // initialize height and width from paren
+           chart.h = this.base.attr("height");
+           chart.w = this.base.attr("width");
+           chart.margin = {
+               top: 20,
+               right: 80,
+               bottom: 30,
+               left: 50
+           };
 
-            // ENTER STATE  - otherwise, create skeletal
-            gEnter = svg.enter()
-                .append("svg")
-                .append("g");
-
-            gEnter.append("g").attr("class", "channels")
-                .append("path").attr("class", "line");
-            gEnter.append("g").attr("class", "x axis");
-            gEnter.append("g").attr("class", "y axis");
-
-            // UPDATE STATE
-
-            //upate outer dimensions
-            svg.attr("width", width)
-                .attr("height", height);
-
-            //update inner dimensions
-            g = svg.select("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-            //update line path
-            g.selectAll(".line")
-                .attr("d", function(d) { return line(d.values);})
-                .style("stroke", function(d) { return color(d.name); });
-
-            //update x-axes
-            g.select(".x.axis")
-                .attr("transform", "translate(0," + yScale.range()[0] + ")")
-                .call(xAxis);
-
-            g.select(".y.axis")
-                .call(yAxis);
-        });
-    }
-
-    // The x-accessor for the path generator; xScale ∘ xValue.
-    function X(d) {
-
-        return xScale(d.date);
-    }
-
-    // The x-accessor for the path generator; yScale ∘ yValue.
-    function Y(d) {
-        return yScale(+d.column);
-    }
-
-    chart.width = function(){
-        return width;
-    }
-
-    chart.height = function(){
-        return height;
-    }
-
-    chart.xScale = function(){
-        return xScale;
-    }
-
-    chart.yScale = function(){
-        return yScale;
-    }
+           chart.base
+               .classed("QualityView", true);
+           chart.layers = {};
 
 
-    chart.xAxis = function(){
-        return xAxis;
-    }
+            //init layers
+           chart.layers.box = chart.base.append("rect")
+               .classed("box", true)
+           chart.layers.qualityTicks = chart.base.append("g")
+               .classed("qualityTicks", true);
 
-    chart.yAxis = function(){
-        return yAxis;
-    }
 
-    chart.g = function(){
-        return g;
-    }
+           chart.layer("box", chart.layers.box, {
+               insert: function() {
+                   return this.attr("class", "line")
+                       .attr("x", 0)
+                       .attr("y", 0)
+                       .attr("width", width)
+                       .attr("height", 100)
+               }
+           });
 
-    chart.margin = function(_) {
-        if (!arguments.length) return margin;
-        margin = _;
-        return chart;
-    };
+           chart.layer("qualityTicks", chart.layers.qualityTicks, {
+               dataBind: function(data){
+                   this.selectAll("rect")
+                       .data(chart.data);
+               },
+               insert: function(){
+                   return this.append('rect');
+               }
+           });
 
-    chart.width = function(_) {
-        if (!arguments.length) return width;
-        width = _;
-        return chart;
-    };
+           var onEnter = function(){
+               this.append("rect")
+                   .attr("x", function (d, i) {
+                       return i * (width / data.length);
+                   })
+                   .attr("y", 0)
+                   .attr("width", function (d, i) {
+                       return width / data.length;
+                   })
+                   .attr("height", 100)
+                   .attr("fill", function (d) {
+                       var red = (d.quality * 255).toFixed(0);
+                       var green = (red + 25);
+                       var blue = 250;
 
-    chart.height = function(_) {
-        if (!arguments.length) return height;
-        height = _;
-        return chart;
-    };
+                       return "rgb(" + red + "," + green + "," + blue + ")";
+                   })
+           };
 
-    chart.x = function(_) {
-        if (!arguments.length) return xValue;
-        xValue = _;
-        return chart;
-    };
+           chart.layer(qualityTicks).on("update", onEnter);
+       },
 
-    chart.y = function(_) {
-        if (!arguments.length) return yValue;
-        yValue = _;
-        return chart;
-    };
-
-    chart.column = function(_){
-        if (!arguments.length) return yValue;
-        column = _;
-        return chart;
-    }
-
-    chart.line = function(){
-        return line;
-    }
-
-    chart.svg = function(){
-        return svg;
-    }
-
-    chart.lineWrapper = function(){
-        return lineWrapper;
-    }
-
-    chart.gEnter = function(){
-        return gEnter;
-    }
-
-    chart.update = function(){
-
-    }
-
-    chart.addColumn = function(column){
-
-        d3.json(serverUrl+"/get-data?column="+column.name, function(error, json) {
-            if (error) return console.warn(error);
-            channels.push(json.columns[0]);
-
-            xScale
-                .domain(d3.extent(channels[0].values, xValue))
-
-            yScale.domain([
-                d3.min(channels, function (d) {
-                    return d3.min(d.values, yValue)
-                }),
-                d3.max(channels, function (d) {
-                    return d3.max(d.values, yValue)
-                })
-            ]);
-
-            g.selectAll(".line")
-                .data(channels)
-                .enter()
-                .append("path")
-                .attr("class", "line")
-                .attr("d", function(d) { return line(d.values);})
-                .style("stroke", function(d) { return color(d.name); });
-        })
-    }
-
-    return chart;
+       width: function(newWidth){
+           if(arguments.length===0){
+               return this.w;
+           }
+           this.w = new newWidth;
+           return this;
+       },
+       height: function(newHeight) {
+           if (arguments.length === 0) {
+               return this.h;
+           }
+           this.h = newHeight;
+           return this;
+       },
+       margin: function(newMargin){
+           if(arguments.legth ===0){
+               return this.margin;
+           }
+           this.margin = newMargin;
+           return this;
+       }
+   });
 });

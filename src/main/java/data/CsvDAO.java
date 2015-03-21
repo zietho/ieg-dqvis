@@ -27,7 +27,9 @@ import timeBench.data.*;
 import timeBench.data.io.TextTableTemporalDatasetReader;
 import timeBench.data.io.schema.TemporalDataColumnSpecification;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by evolution on 07/07/2014.
@@ -165,85 +167,66 @@ public class CsvDAO implements DataDAO{
         return this.schema;
     }
 
-    public TemporalColumn readAggregated(String column, int granularityDepth){
-        logger.info("in read Aggregated: "+column+granularityDepth);
-        Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
-                                    .rows(  new ComparisonPredicate(ComparisonPredicate.EQ,
-                                            new ColumnExpression(ParentChildNode.DEPTH),
-                                            new NumericLiteral(granularityDepth))
-                                    );
-
-        TemporalColumn temporalColumn = new TemporalColumn(column);
-        int id;
-        double missing, invalid, quality, missingTimestamp, mean;
-        long date;
-
-        //TODO - unsorted!*/
-        while(iterator.hasNext()) {
-            //retrieve temporal element - IN
-            id = iterator.next();
-            TemporalObject temporalObject = aggregatedDataset.getTemporalObject(id);
-            GenericTemporalElement temporalElement = aggregatedDataset.getTemporalElement(id);
-
-            //calculate quality - TRANSFORM
-            mean = temporalObject.getDouble(column);
-            missing = temporalObject.getDouble(column + ".MissingData");
-            invalid = temporalObject.getDouble(column + ".InvalidData");
-            quality = (missing+invalid)/2;
-            logger.info("missing: "+missing);
-            logger.info("missing: "+invalid);
-            logger.info("single quality: "+quality);
-            date = (temporalElement.getInf() == temporalElement.getSup()) ? temporalElement.getInf() : 0;
-
-            //save into new tempral object - OUTPUT
-            temporalColumn.add(new TemporalValue(date, mean, quality));
-        }
-
-        return  temporalColumn;
+    public TemporalColumn readAggregated(String column, int granularity){
+        List<String> columns = new ArrayList<String>();
+        columns.add(column);
+        return  readAggregated(columns, granularity);
     }
 
-    public TemporalColumn readAggregated(int granularityDepth){
+
+    public TemporalColumn readAggregated(int granularity){
+        List<String> columns = new ArrayList<String>();
+        int numberOfColumns = (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0);
+        for(int i=0; i<numberOfColumns;i++) {
+            columns.add(this.datasetSchema.getColumnName(i));
+        }
+
+        return readAggregated(columns, granularity);
+    }
+
+    public TemporalColumn readAggregated(List<String> columns, int granularity){
 
         Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
                 .rows(  new ComparisonPredicate(ComparisonPredicate.EQ,
                                 new ColumnExpression(ParentChildNode.DEPTH),
-                                new NumericLiteral(granularityDepth))
+                                new NumericLiteral(granularity))
                 );
 
-        TemporalColumn temporalColumn = new TemporalColumn("all");
+        //name new temporal column
+        TemporalColumn temporalColumn;
+        if(columns.size()==1) {
+            temporalColumn = new TemporalColumn(columns.get(0));
+        }else if(columns.size()< (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0)) {
+            temporalColumn = new TemporalColumn("selected");
+        }else{
+            temporalColumn = new TemporalColumn("all");
+        }
+
         int id;
-        double missing, invalid, quality, missingTimestamp, q, numberOfColumns;
+        double mean = 0, quality, missingTimestamp, q = 0;
         long date;
-        numberOfColumns = Math.ceil(((double) this.datasetSchema.getColumnCount() - 2.0) / 3.0);
 
         //TODO - unsorted!*/
         while(iterator.hasNext()) {
             id = iterator.next();
             TemporalObject temporalObject = aggregatedDataset.getTemporalObject(id);
             GenericTemporalElement temporalElement = aggregatedDataset.getTemporalElement(id);
-            quality = 0;
-            date = (temporalElement.getInf() == temporalElement.getSup()) ? temporalElement.getInf() : 0;
+            date = temporalElement.getInf();
             missingTimestamp = temporalObject.getDouble("MissingTimeStamp");
-
+            quality = 0;
+            mean = 0;
 
             //iterate over all the different columns
-            for(int i=0; i<numberOfColumns;i++) {
-                String column = this.datasetSchema.getColumnName(i);
-
-                missing = temporalObject.getInt(column + ".MissingData");
-                invalid = temporalObject.getInt(column + ".InvalidData");
-
-                //TODO - improve quality calculation! now its is simple and without weights
-                q = 0;
-                q = (missing >0) ? q + (1.0 / 3.0) : q;
-                q = (invalid >0) ? q + (1.0 / 3.0) : q;
-                quality += q;
+            for(String column : columns) {
+                quality += temporalObject.getDouble(column + ".MissingData");
+                quality += temporalObject.getDouble(column + ".InvalidData");
+                mean += temporalObject.getDouble(column);
             }
 
-            quality = quality/numberOfColumns;
-            quality = (missingTimestamp == 1) ? quality + (1.0 / 3.0) : quality;
-
-            TemporalValue temporalValue = new TemporalValue(date, 0, quality);
+            logger.debug("before : "+quality + " timestampt: "+missingTimestamp+ "with size: "+columns.size());
+            quality = ((quality/columns.size())+missingTimestamp)/3;
+            mean = mean/columns.size();
+            TemporalValue temporalValue = new TemporalValue(date, mean, quality);
             temporalColumn.add(temporalValue);
         }
 
