@@ -1,4 +1,4 @@
-require(['d3','./app/qualityview'], function(d3,  qv) {
+require(['d3','d3.chart','./app/qualityview'], function(d3, d3chart,  qv) {
 
     console.log(d3.version);
     console.log("klj ");

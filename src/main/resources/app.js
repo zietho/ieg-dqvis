@@ -8,7 +8,17 @@ requirejs.config({
     paths: {
         app: '../app'
     },
-    
+    shim: {
+
+        'd3.chart': {
+            //These script dependencies should be loaded before loading
+            //backbone.js
+            deps: ['d3'],
+            //Once loaded, use the global 'Backbone' as the
+            //module value.
+            exports: 'd3.chart'
+        }
+    }
 });
 
 // Start loading the main app file. Put all of
