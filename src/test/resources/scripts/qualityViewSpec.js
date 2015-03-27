@@ -1,83 +1,77 @@
-define(['d3','d3.chart','app/qualityview'], function(d3,qv) {
-    describe("create quality view", function(){
-        it("to be false", function(){
+define(['d3','app/qualityview'], function(d3,qv) {
 
-            var qualityView = qv
-                .x(function (d) {
-                    return new Date(+d.date);
-                })
-                .y(function (d) {
-                    return +d.quality;
-                })
-                .height(100)
-                .margin({top: 0, right: 80, bottom: 30, left: 50});
+    describe("the test data", function(){
+        var data;
 
-            expect(qualityView).not.toBeNull();
-        })
-    });
-    describe("createQualityView", function(){
-        it("to be false", function(){
-
-            var qualityView = qv
-                .x(function (d) {
-                    return new Date(+d.date);
-                })
-                .y(function (d) {
-                    return +d.quality;
-                })
-                .height(100)
-                .margin({top: 0, right: 80, bottom: 30, left: 50});
-
-            expect(qualityView).not.toBeNull();
-        })
+        beforeEach(function(done){
+            //load data
+            d3.json("base/src/test/resources/data/test.json", function (error, json) {
+                if (error) return console.warn(error);
+                data = json;
+                done();
+            });
+        });
+        it("to be not undefined", function(){
+            expect(data).not.toBeUndefined();
+        });
+        it("to be 120 elements in the test data", function(){
+            expect(data.length).toBe(120);
+        });
     });
 
-    describe("createQualityView", function(){
-        it("to be false", function(){
+    describe("the layers", function(){
+        var data,
+            qualityView;
 
-            var qualityView = qv
-                .x(function (d) {
-                    return new Date(+d.date);
-                })
-                .y(function (d) {
-                    return +d.quality;
-                })
-                .height(100)
+        beforeEach(function(done){
+            //create qualityView
+            qualityView =  qv()
+                .height(50)
+                .width(800)
                 .margin({top: 0, right: 80, bottom: 30, left: 50});
+            //load data
+            d3.json("base/src/test/resources/data/test.json", function (error, json) {
+                if (error) return console.warn(error);
+                data = json;
+                done();
+            });
+        });
+        it("to be not undefined", function(){
+            d3.select("body")
+                .datum(data[0].values)
+                .call(qualityView);
 
-            expect(qualityView).not.toBeNull();
-        })
+            d3.select("body").
+        });
+        it("to be 120 elements in the test data", function(){
+            expect(data.length).toBe(120);
+        });
     });
+
+
+
+
+
+
+
+
+
+
+    //describe("create quality view", function(){
+    //    it("to be false", function(){
+    //        d3.select("body")
+    //            .datum(data)
+    //        expect(qualityView).not.toBeNull();
+    //    })
+    //});
+    //describe("check layers", function(){
+    //    it("to be the set height", function(){
+    //
+    //
+    //
+    //        expect(qualityView).not.toBeNull();
+    //    })
+    //});
+
+
 });
-
-
-
-
-/*
-var qualityView = qv
-    .x(function (d) {
-        return new Date(+d.date);
-    })
-    .y(function (d) {
-        return +d.quality;
-    })
-    .height(100)
-    .margin({top: 0, right: 80, bottom: 30, left: 50});
-
- //get data
- d3.json(serverUrl + "/get-data?granularity=minute", function (error, json) {
-     if (error) return console.warn(error);
-     var data = d3.select("#visualization")
-     .datum(json.columns);
-     data.call(detailView);
-     d3.select("#visualization")
-     .datum(json.columns[0].values)
-     .call(qualityView);
-     d3.select("#visualization")
-     .datum(json.columns[0].values)
-     .call(timeSliderView);
- });
-
-
-
-*/

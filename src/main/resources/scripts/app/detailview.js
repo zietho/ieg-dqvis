@@ -1,3 +1,5 @@
+//function QualityBarView() {
+define(['d3'], function (d3) {
 var margin= {top: 20,right: 80, bottom: 30, left: 50},
     width =  960,
     height = 500,
@@ -201,3 +203,4 @@ chart.addColumn = function(column){
 }
 
 return chart;
+}

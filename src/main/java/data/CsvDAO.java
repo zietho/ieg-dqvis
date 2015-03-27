@@ -155,10 +155,10 @@ public class CsvDAO implements DataDAO{
     public core.Schema getColumnNames(){
         if(schema == null) {
             core.Schema schema = new core.Schema();
-            prefuse.data.Schema prefuseSchema = dataset.getTemporalObjectTable().getSchema();
+            int numberOfColumns = (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0);
             //cut off the first 3 columns as they are id... temp something..
-            for (int i = 3; i < prefuseSchema.getColumnCount(); i++) {
-                schema.addColumn(new core.Column(prefuseSchema.getColumnName(i)));
+            for (int i = 0; i < numberOfColumns; i++) {
+                schema.addColumn(new core.Column(this.datasetSchema.getColumnName(i)));
             }
             logger.info("available columns {}", schema.getColumns().toString());
             this.schema = schema;

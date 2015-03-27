@@ -1,14 +1,12 @@
 package data;
 
+import core.Schema;
 import core.TemporalColumn;
 import core.TemporalData;
-import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import resources.TemporalDataResource;
 import timeBench.data.GranularityAggregationTree;
 import timeBench.data.TemporalDataset;
 
@@ -23,11 +21,6 @@ public abstract class DataDAOTest {
     protected void setUpDAO(DataDAO dataDAO){
         DataDAOTest.dataDAO = dataDAO;
     }
-
-    @ClassRule
-    public static final ResourceTestRule resources = ResourceTestRule.builder()
-            .addResource(new TemporalDataResource(DataDAOTest.dataDAO))
-            .build();
 
 
     @Before
@@ -135,7 +128,12 @@ public abstract class DataDAOTest {
         assertTrue(temporalColumn.getValues().size()==1);
     }
 
+    @Test
+    public void testGetAvailableColumns() throws Exception{
+        Schema schema = dataDAO.getColumnNames();
+        assertTrue(schema.getColumns().size()==9);
 
+    }
 
 
 }

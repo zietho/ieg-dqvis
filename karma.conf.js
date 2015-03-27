@@ -16,7 +16,13 @@ module.exports = function(config) {
         {pattern: 'src/main/resources/scripts/**/*.js', included: false},
         {pattern: 'src/test/resources/scripts/**/*Spec.js', included: false},
 
-        'src/test/resources/scripts/**/*.js'
+        'src/test/resources/scripts/**/*.js',
+
+        // JSON fixture
+        {pattern:  'src/test/resources/data/test.json',
+            watched:  true,
+            served:   true,
+            included: false }
     ],
 
     // list of files to exclude
