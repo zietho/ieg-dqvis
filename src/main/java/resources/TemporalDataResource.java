@@ -10,6 +10,7 @@ import timeBench.data.TemporalDataset;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,16 +30,52 @@ public class TemporalDataResource {
 
     @GET
     @Timed
-    public TemporalData readData(@QueryParam("column") List<String> columns, @QueryParam("granularity") @DefaultValue("hour") String granularity, @QueryParam("from") Optional<String> from, @QueryParam("to") Optional<String> to){
+    public TemporalData readData(@QueryParam("column") List<String> columns, @QueryParam("granularity") @DefaultValue("hour") String granularity, @QueryParam("from") Optional<String> from, @QueryParam("to") Optional<String> to, @QueryParam("load") Optional<String> load, @QueryParam("indicator") List<String> indicators){
         TemporalData temporalData = new TemporalData();
+        if(indicators != null){
 
-        if(columns!=null && !columns.isEmpty()) {
-            temporalData.add(dataDAO.readAggregated(columns, this.getLevel(granularity)));
-            return temporalData;
-        }else {
-            temporalData.add(dataDAO.readAggregated(this.getLevel(granularity)));
-            return temporalData;
+
+            indicators = new ArrayList<String>();
+            indicators.add(".MissingData");
+            indicators.add(".InvalidData");
+            indicators.add("MissingTimestamp");
+
         }
+
+        //loading a single column
+        if(!columns.isEmpty() && columns.size()==1) {
+            if(columns.get(0).equals("all")) {
+
+                    temporalData.add(dataDAO.readAggregated(this.getLevel(granularity), indicators));
+
+            }else{
+
+                    temporalData.add(dataDAO.readAggregated(columns, this.getLevel(granularity), indicators));
+            }
+        }
+        //loading multiple columns
+        else if(!columns.isEmpty() && columns.size()>1){
+            //individually
+            if(load.isPresent() && load.get().equals("individually")){
+                for(String column:columns){
+
+                        temporalData.add(dataDAO.readAggregated(column, this.getLevel(granularity), indicators));
+
+                }
+            }
+            //aggregated
+            else{
+
+                    temporalData.add(dataDAO.readAggregated(columns, this.getLevel(granularity), indicators));
+
+            }
+        }
+        //default
+        else{
+            temporalData.add(dataDAO.readAggregated(this.getLevel(granularity)));
+        }
+
+        return temporalData;
     }
 
     private int getLevel(String granularity){

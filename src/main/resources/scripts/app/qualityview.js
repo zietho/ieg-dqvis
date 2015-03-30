@@ -1,98 +1,133 @@
 //function QualityBarView() {
-define(['d3'], function (d3) {
+define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
 
     //create closure
     function qualityView(selection) {
-
-        var layers = {};
-
         //init + set defaults
         var margin = {top: 20, right: 80, bottom: 30, left: 50},
             width = 960 - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom,
-            svg, g,columnName,
-            xValue = function (d) {
-                return d[0];
-            },
-            yValue = function (d) {
-                return d[1];
-            };
+            svg,
+            g,
+            serverUrl,
+            layers={},
+            qualityStripes=[],
+            columns=[],
+            tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0),
+            qualityIndicator;
 
-        /* onEvent Methods */
-        function onEnterQualityTicks(data){
-            var numberOfTicks = data[0].length;
-            var tickWith = (width / numberOfTicks);
+        layers.qualityStripes = function(){
+            var qualityStripes = svg.append("g")
+                .classed("qualityStripes", true)
+                .attr("transform", "translate(35,0)");
+            qualityStripes
+                .append("g")
+                .attr("id", "allQualityStripe");
+            qualityStripes
+                .append("g")
+                .attr("id", "individualQualityStripes")
+                .attr("transform", "translate(0,30)")
+                .classed("invisible", true);
 
-            this.append("rect")
-                .attr("x", function (d, i) {
-                    return i * tickWith ;
-                })
-                .attr("y", 0)
-                .attr("width", function (d, i) {
-                    return tickWith;
-                })
-                .attr("height", height)
-                .attr("fill", function (d) {
-                    var red = 199;
-                    var green = ((1-d.quality)*red).toFixed(0);
-                    var blue = 65+green;
-                    return "rgb("+red+","+green+","+green+")";
-                })
+            return qualityStripes;
         }
+        layers.individualQualityStripes = function(){
 
-        /* LAYERS */
-        layers.border = function(){
-            var border = svg.append("rect")
-                .classed("border", true)
-                .attr("class", "qualityViewBorder")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", width)
-                .attr("height", height)
-                .attr("fill", "white");
-            return border;
+            return qualityStripes;
         }
+        layers.qualityIndicator = function(){
+            var select = d3.select(svg.node().parentNode)
+                .append("select")
+                .attr("id", "qualityIndicator");
 
-        layers.legend = function(){
-            var legend = svg.append("text")
-                .classed("qualityViewLegend", true)
-                .text(columnName)
-                .attr("x", 10)
-                .attr("y",50)
-                .attr("class", "qualityViewLegendText");
+            select
+                .on("change", changeDataQualityIndicator);
+            select
+                .append("option")
+                .attr("value", "all")
+                .text("All");
+            select
+                .append("option")
+                .attr("value", "mv")
+                .text("Missing Values");
+            select
+                .append("option")
+                .attr("value", "mt")
+                .text("Missing Timestamps");
+            select
+                .append("option")
+                .attr("value", "iv")
+                .text("Invalid Values");
 
+            return select;
         }
+        layers.toggle = function(){
+            var toggle = svg.append("polygon")
+                    .classed("qualityStripeToggle", true)
+                    .attr("fill", "grey")
+                    .attr("stroke", "grey")
+                    .attr("points", "00,00 10,20 20,00")
+                    .on("click", toggleIndividualQualityStripes)
+                    .on("mouseover", showToggleTooltip)
+                    .on("mouseout", hideToggleTooltip);
 
-        layers.ticks = function(d){
-            console.log(d);
-            var ticks = svg.append("g")
-                .classed("qualityTicks", true)
-                .selectAll("rect")
-                .data(d)
-                .enter()
-                .call(onEnterQualityTicks); //call on Enter handler
+            return toggle;
         }
 
         function chart(selection) {
-            selection.each(function (data) {
-                svg = d3.select(this).append("svg");
-                svg.attr("width", width)
-                    .attr("height", height);
-                //@TODO fix border
-                layers.border();
-                layers.ticks(data);
-                layers.legend();
-            });
+            //add new svg
+            svg = selection.append("svg");
+            svg.attr("width", width)
+                .attr("height", 600)
+                .attr("id", "qualityView");
+
+            //add layers
+            layers.toggle();
+            layers.qualityStripes();
+            layers.qualityIndicator();
         }
 
-        // The x-accessor for the path generator; xScale ∘ xValue.
-        function X(d) {
-            return xScale(d[0]);
+        function toggleIndividualQualityStripes(){
+            var toggle = d3.select(this);
+            var iqs = d3.select("#individualQualityStripes");
+
+            if(iqs.classed("visible")){
+                iqs
+                    .classed("visible", false)      //remove class if class was already active
+                    .classed("invisible", true);    //add invisibility
+                toggle
+                    .transition()
+                    .attr("points", "00,00 10,20 20,00");
+            }else{
+                iqs.classed("visible", true); //remove class if class was already active
+                toggle
+                    .transition()
+                    .attr("points", "00,20 10,00 20,20");
+            }
         }
 
-        // The x-accessor for the path generator; yScale ∘ yValue.
-        function Y(d) {
-            return yScale(d[1]);
+        function showToggleTooltip(tooltipText){
+            tooltip
+                .transition()
+                .duration(200)
+                .style("opacity", .9);
+            tooltip
+                .html("press to show individual channels")
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        }
+
+        function hideToggleTooltip(){
+            tooltip
+                .transition()
+                .duration(500)
+                .style("opacity", 0);
+        }
+
+        function changeDataQualityIndicator(){
+            var currentValue = d3.event.target.value;
         }
 
         chart.margin = function (_) {
@@ -119,18 +154,60 @@ define(['d3'], function (d3) {
             if (!arguments.length) return yValue;
             yValue = _;
             return chart;
-        };
-        chart.columnName = function (_) {
-            if (!arguments.length) return columnName;
-            columnName = _;
+        }
+        chart.addColumn = function(_){
+            if (!arguments.length) return null;
+            columns.push(_);
+            return chart;
+        }
+        chart.serverUrl = function(_){
+            if (!arguments.length) return serverUrl;
+            serverUrl = _;
+            return chart;
+        }
+        chart.bindTo = function(_){
+            if (!arguments.length) return bindTo;
+            bindTo = _;
             return chart;
         };
+        chart.addQualityStripe = function(column){
+            var newQualityStripe = qs()
+            .height(25)
+            .margin({top: 0, right: 0, bottom: 0, left: 0})
+            .width(750)
+            .observer(this)
+            .columnName(column.name);
 
-        //set defaults like that
-        //chord.width(options.width || 800);
-        //chord.height(options.height || 500);
-        //chord.setRadius();
+            d3.select((column.name == "all") ?
+                    "#allQualityStripe" :
+                    "#individualQualityStripes"
+            )
+            .datum(column.values)
+            .call(newQualityStripe);
+        }
+        chart.removeQualityStripe = function(selection){
+            var current = selection.node();
+            var translate = false;
 
+            d3.selectAll("g.qualityStripe").each(function(d,i) {
+                if(!translate)
+                    if(current == this)
+                        translate = true;
+                if (current != this && translate) {
+                    var x = (30*(i-1))-30;
+                    d3.select(this)
+                        .transition()
+                        .attr("transform", "translate(0,"+x+")");
+                }
+            });
+
+            selection.transition().remove();
+        };
+        chart.qualityIndicator = function (_) {
+            if (!arguments.length) return qualityIndicator;
+            qualityIndicator = _;
+
+        };
         return chart;
     };
 

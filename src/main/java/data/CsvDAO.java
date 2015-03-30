@@ -173,6 +173,12 @@ public class CsvDAO implements DataDAO{
         return  readAggregated(columns, granularity);
     }
 
+    public TemporalColumn readAggregated(String column, int granularity, List<String> indicators){
+        List<String> columns = new ArrayList<String>();
+        columns.add(column);
+        return  readAggregated(columns, granularity, indicators);
+    }
+
 
     public TemporalColumn readAggregated(int granularity){
         List<String> columns = new ArrayList<String>();
@@ -184,7 +190,27 @@ public class CsvDAO implements DataDAO{
         return readAggregated(columns, granularity);
     }
 
+    public TemporalColumn readAggregated(int granularity, List<String> indicators){
+        List<String> columns = new ArrayList<String>();
+        int numberOfColumns = (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0);
+        for(int i=0; i<numberOfColumns;i++) {
+            columns.add(this.datasetSchema.getColumnName(i));
+        }
+
+        return readAggregated(columns, granularity, indicators);
+    }
+
+
     public TemporalColumn readAggregated(List<String> columns, int granularity){
+        List<String> indicators = new ArrayList<String>();
+        //add all
+        indicators.add("$.MissingData");
+        indicators.add("$.InvalidData");
+        indicators.add("MissingTimeStamp");
+        return readAggregated(columns, granularity, indicators);
+    }
+
+    public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators){
 
         Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
                 .rows(  new ComparisonPredicate(ComparisonPredicate.EQ,
@@ -203,7 +229,7 @@ public class CsvDAO implements DataDAO{
         }
 
         int id;
-        double mean = 0, quality, missingTimestamp, q = 0;
+        double mean = 0, quality, missingTimestamp, q = 0, includeMissingValues, includeInvalidValues, includeMissingTimestamps;
         long date;
 
         //TODO - unsorted!*/
@@ -212,19 +238,32 @@ public class CsvDAO implements DataDAO{
             TemporalObject temporalObject = aggregatedDataset.getTemporalObject(id);
             GenericTemporalElement temporalElement = aggregatedDataset.getTemporalElement(id);
             date = temporalElement.getInf();
-            missingTimestamp = temporalObject.getDouble("MissingTimeStamp");
+           // missingTimestamp = temporalObject.getDouble("MissingTimeStamp");
             quality = 0;
             mean = 0;
 
+
             //iterate over all the different columns
             for(String column : columns) {
-                quality += temporalObject.getDouble(column + ".MissingData");
-                quality += temporalObject.getDouble(column + ".InvalidData");
+
+                for(String indicator:indicators){
+                    //check if its a pattern
+                    indicator = indicator.replaceAll("\\$", column);
+                    logger.info(indicator);
+                    q += temporalObject.getDouble(indicator);
+
+                }
+
+                quality += q/indicators.size();
+                q = 0; //reset local aggregated quality
                 mean += temporalObject.getDouble(column);
             }
 
-            logger.debug("before : "+quality + " timestampt: "+missingTimestamp+ "with size: "+columns.size());
-            quality = ((quality/columns.size())+missingTimestamp)/3;
+            //logger.debug("before : "+quality + " timestampt: "+missingTimestamp+ "with size: "+columns.size());
+
+
+
+            quality = (quality/columns.size());
             mean = mean/columns.size();
             TemporalValue temporalValue = new TemporalValue(date, mean, quality);
             temporalColumn.add(temporalValue);
