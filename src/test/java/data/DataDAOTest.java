@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import timeBench.data.GranularityAggregationTree;
 import timeBench.data.TemporalDataset;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertTrue;
 
 public abstract class DataDAOTest {
@@ -41,7 +44,7 @@ public abstract class DataDAOTest {
     @Test
     public void testReadShouldReturnTermporalData() throws Exception{
         TemporalData temporalData = dataDAO.read();
-        assertTrue(temporalData.getColumns().size()==28); //garuantee that the dataset contains 28 columns
+        assertTrue(temporalData.getColumns().size() == 28); //garuantee that the dataset contains 28 columns
         assertTrue(temporalData.getColumns().get(0).getValues().size()>1); // guarentee that the dataset contains 13 rows / records
     }
 
@@ -89,7 +92,7 @@ public abstract class DataDAOTest {
         dataDAO.setAggregatedDataset((GranularityAggregationTree) dataDAO.aggregate());
         TemporalColumn temporalColumn = dataDAO.readAggregated("h", 3);
         logger.info("size: "+temporalColumn.getValues().size());
-        assertTrue(temporalColumn.getValues().size()==4);
+        assertTrue(temporalColumn.getValues().size() == 4);
         double h = temporalColumn.getValues().get(0).getColumn();
         double h2 =  temporalColumn.getValues().get(1).getColumn();
         double h3  =  temporalColumn.getValues().get(2).getColumn();
@@ -97,8 +100,8 @@ public abstract class DataDAOTest {
         logger.info(""+h2);
         logger.info(""+h3);
         assertTrue(h == 1.5);
-        assertTrue(h2==6);
-        assertTrue(h3==2.5);
+        assertTrue(h2 == 6);
+        assertTrue(h3 == 2.5);
 
     }
 
@@ -106,7 +109,7 @@ public abstract class DataDAOTest {
     public void testHours() throws Exception{
         dataDAO.setAggregatedDataset((GranularityAggregationTree) dataDAO.aggregate());
         TemporalColumn temporalColumn = dataDAO.readAggregated("h", 2);
-        logger.info("size: "+temporalColumn.getValues().size());
+        logger.info("size: " + temporalColumn.getValues().size());
         assertTrue(temporalColumn.getValues().size()==3);
 
     }
@@ -133,6 +136,26 @@ public abstract class DataDAOTest {
         Schema schema = dataDAO.getColumnNames();
         assertTrue(schema.getColumns().size()==9);
 
+    }
+
+    @Test
+    public void testReadAggregatedWithColumnGranularityAndIndicators() throws Exception{
+
+        //agregated
+        dataDAO.setAggregatedDataset((GranularityAggregationTree) dataDAO.aggregate());
+
+        //first generate all indicators
+        List<String> indicators = new ArrayList<String>();
+        indicators.add("$.InvalidData");
+
+        //read out results
+        TemporalColumn temporalColumn = dataDAO.readAggregated("w", 3, indicators);
+        logger.info(""+temporalColumn.getValues().get(0).getQuality());
+        logger.info(""+temporalColumn.getValues().get(1).getQuality());
+        assertTrue(temporalColumn.getValues().get(0).getQuality()==0.5);
+        assertTrue(temporalColumn.getValues().get(1).getQuality()==0.3333333333333333);
+        assertTrue(temporalColumn.getValues().get(2).getQuality()==1);
+        assertTrue(temporalColumn.getValues().get(3).getQuality()==1);
     }
 
 

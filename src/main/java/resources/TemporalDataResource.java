@@ -33,23 +33,17 @@ public class TemporalDataResource {
     public TemporalData readData(@QueryParam("column") List<String> columns, @QueryParam("granularity") @DefaultValue("hour") String granularity, @QueryParam("from") Optional<String> from, @QueryParam("to") Optional<String> to, @QueryParam("load") Optional<String> load, @QueryParam("indicator") List<String> indicators){
         TemporalData temporalData = new TemporalData();
         if(indicators != null){
-
-
             indicators = new ArrayList<String>();
-            indicators.add(".MissingData");
-            indicators.add(".InvalidData");
-            indicators.add("MissingTimestamp");
-
+            indicators.add("$.MissingData");
+            indicators.add("$.InvalidData");
+            indicators.add("MissingTimeStamp");
         }
 
         //loading a single column
         if(!columns.isEmpty() && columns.size()==1) {
             if(columns.get(0).equals("all")) {
-
                     temporalData.add(dataDAO.readAggregated(this.getLevel(granularity), indicators));
-
             }else{
-
                     temporalData.add(dataDAO.readAggregated(columns, this.getLevel(granularity), indicators));
             }
         }
@@ -58,16 +52,12 @@ public class TemporalDataResource {
             //individually
             if(load.isPresent() && load.get().equals("individually")){
                 for(String column:columns){
-
                         temporalData.add(dataDAO.readAggregated(column, this.getLevel(granularity), indicators));
-
                 }
             }
             //aggregated
             else{
-
                     temporalData.add(dataDAO.readAggregated(columns, this.getLevel(granularity), indicators));
-
             }
         }
         //default
@@ -87,6 +77,4 @@ public class TemporalDataResource {
             default: return 3;
         }
     }
-
-
 }

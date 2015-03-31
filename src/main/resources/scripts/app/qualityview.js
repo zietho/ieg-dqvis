@@ -50,16 +50,17 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
                 .text("All");
             select
                 .append("option")
-                .attr("value", "mv")
+                .attr("value", "$.MissingData")
                 .text("Missing Values");
             select
                 .append("option")
-                .attr("value", "mt")
-                .text("Missing Timestamps");
+                .attr("value", "$.InvalidData")
+                .text("Invalid Values");
             select
                 .append("option")
-                .attr("value", "iv")
-                .text("Invalid Values");
+                .attr("value", "MissingTimeStamp")
+                .text("Missing Timestamp");
+
 
             return select;
         }
@@ -128,6 +129,20 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
 
         function changeDataQualityIndicator(){
             var currentValue = d3.event.target.value;
+
+            d3.selectAll(".qualityStripe").each(function(d,i){
+                var currentQualityStripe = d3.select(this);
+                var column = currentQualityStripe.select(".qualityViewLegendText").text();
+
+                if(column != "all"){
+                    d3.json(serverUrl + "/get-data?column="+column+"&granularity=minute&indicator="+currentValue, function (error, json) {
+                        if (error) return console.warn(error);
+                        console.log(json.columns[0].values);
+                        console.log(currentQualityStripe);
+                        currentQualityStripe.data(json.columns[0].values);
+                    });
+                }
+            })
         }
 
         chart.margin = function (_) {

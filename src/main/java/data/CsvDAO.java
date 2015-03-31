@@ -200,7 +200,6 @@ public class CsvDAO implements DataDAO{
         return readAggregated(columns, granularity, indicators);
     }
 
-
     public TemporalColumn readAggregated(List<String> columns, int granularity){
         List<String> indicators = new ArrayList<String>();
         //add all
