@@ -1,5 +1,5 @@
 //function QualityBarView() {
-define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
+define(['d3','jquery','./qualityStripe', './qualitySlider'], function (d3, jQuery,qualityStripe,qualitySlider) {
 
     //create closure
     function qualityView(selection) {
@@ -11,20 +11,28 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
             g,
             serverUrl,
             layers={},
-            qualityStripes=[],
+            qualityStripes= {},
             columns=[],
             tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("opacity", 0),
-            qualityIndicator;
+            qualityIndicator,
+            drag,
+            invisibleQualityStripes = false,
+            addSign,
+            invisibles = [],
+            addQualityStripePanel;
 
+        // LAYERS
         layers.qualityStripes = function(){
             var qualityStripes = svg.append("g")
                 .classed("qualityStripes", true)
+                .attr("id", "qualityStripes")
                 .attr("transform", "translate(35,0)");
             qualityStripes
                 .append("g")
-                .attr("id", "allQualityStripe");
+                .attr("id", "allQualityStripe")
+                .attr("width", width);
             qualityStripes
                 .append("g")
                 .attr("id", "individualQualityStripes")
@@ -33,20 +41,21 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
 
             return qualityStripes;
         }
-        layers.individualQualityStripes = function(){
 
+        layers.individualQualityStripes = function(){
             return qualityStripes;
         }
+
         layers.qualityIndicator = function(){
             var select = d3.select(svg.node().parentNode)
                 .append("select")
-                .attr("id", "qualityIndicator");
+                .attr("id", "qualityIndicatorSelect");
 
             select
                 .on("change", changeDataQualityIndicator);
             select
                 .append("option")
-                .attr("value", "all")
+                .attr("value", "$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp")
                 .text("All");
             select
                 .append("option")
@@ -64,6 +73,7 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
 
             return select;
         }
+
         layers.toggle = function(){
             var toggle = svg.append("polygon")
                     .classed("qualityStripeToggle", true)
@@ -77,6 +87,65 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
             return toggle;
         }
 
+        layers.addSign= function(){
+            addSign = svg
+                .append("text")
+                .classed("invisible", true)
+                .attr("id","addSign")
+                .attr("x", 0)
+                .attr("y",50)
+                .text("+")
+                .on("click", showHiddenQualityStripes);
+        }
+
+        layers.addQualityStripesPanel = function(){
+            addQualityStripePanel = svg
+                .append("g")
+                .attr("id", invisibleQualityStripes)
+                .attr("transform", "translate(0,"+75+")");
+        }
+
+        layers.addQualityStripesTexts = function(data){
+            var invisibleStripeTexts = addQualityStripePanel
+                .selectAll("text")
+                .data(data);
+
+            //update = enter selection
+            invisibleStripeTexts
+                .enter()
+                .append("text")
+                .text(function(d, i){
+                    return d;
+                })
+                .on("click", reAddQualityStripe)
+                .attr("x",0)
+                .attr("y", function(d,i){
+                    return i*30;
+                })
+                .classed("invisbleQualityStripe", true)
+
+
+            //exit selection
+            invisibleStripeTexts
+                .exit()
+                .remove();
+        }
+
+        layers.timeSlider = function(){
+
+            var timeSlider = qualitySlider()
+                .value([33,66])
+                .baseHeight(25)
+                .scale(d3.scale.linear().domain([0, 100]).rangeRound([0, 730]))
+                .on("slide", function(evt, value) {
+                    console.log("value: "+value);
+                });
+
+            d3.select("#allQualityStripe").call(timeSlider);
+
+
+        }
+
         function chart(selection) {
             //add new svg
             svg = selection.append("svg");
@@ -86,13 +155,17 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
 
             //add layers
             layers.toggle();
+            layers.addSign();
+            layers.addQualityStripesPanel();
             layers.qualityStripes();
             layers.qualityIndicator();
+            layers.timeSlider();
         }
 
+        // INTERACTION
         function toggleIndividualQualityStripes(){
-            var toggle = d3.select(this);
-            var iqs = d3.select("#individualQualityStripes");
+            var toggle = d3.select(this),
+                iqs = d3.select("#individualQualityStripes");
 
             if(iqs.classed("visible")){
                 iqs
@@ -101,11 +174,17 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
                 toggle
                     .transition()
                     .attr("points", "00,00 10,20 20,00");
+                if(invisibleQualityStripes){
+                    hideAddSign();
+                }
             }else{
                 iqs.classed("visible", true); //remove class if class was already active
                 toggle
                     .transition()
                     .attr("points", "00,20 10,00 20,20");
+                if(invisibleQualityStripes){
+                    showAddSign();
+                }
             }
         }
 
@@ -127,6 +206,8 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
                 .style("opacity", 0);
         }
 
+
+
         function changeDataQualityIndicator(){
             var currentValue = d3.event.target.value;
 
@@ -134,17 +215,61 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
                 var currentQualityStripe = d3.select(this);
                 var column = currentQualityStripe.select(".qualityViewLegendText").text();
 
-                if(column != "all"){
-                    d3.json(serverUrl + "/get-data?column="+column+"&granularity=minute&indicator="+currentValue, function (error, json) {
-                        if (error) return console.warn(error);
-                        console.log(json.columns[0].values);
-                        console.log(currentQualityStripe);
-                        currentQualityStripe.data(json.columns[0].values);
-                    });
-                }
+                d3.json(serverUrl + "/get-data?column="+column+"&granularity=minute&indicator="+currentValue, function (error, json) {
+                    if (error) return console.warn(error);
+                    qualityStripes[column].redraw(json.columns[0].values);
+                });
             })
+
+            qualityIndicator = currentValue; //set qualityIndicator
         }
 
+        function reAddQualityStripe(d){
+
+            var columnName = d;
+            //.data(); // get stripe in question
+
+            //in the invisible data quality panel remove
+            var index = jQuery.inArray(columnName, invisibles);
+            invisibles.splice(index,1); //delete from data
+            layers.addQualityStripesTexts(invisibles); // redraw
+
+            //in the individual quality stripes add
+            d3.json(serverUrl + "/get-data?column="+columnName+"&granularity=minute&indicator="+qualityIndicator, function (error, json) {
+                if (error) return console.warn(error);
+
+                //dispose old one
+                if(typeof qualityStripes[columnName] != 'undefined'){
+                    delete qualityStripes[columnName];
+                }
+                var a = this;
+                //add new one
+                console.log(json.columns[0]);
+                chart.addQualityStripe(json.columns[0])
+
+            });
+        }
+
+        function showHiddenQualityStripes(){
+                //go through all hidden quality stripes and get their references
+                //get the text of all hidden quality stripes
+            //build
+
+            console.log(invisibles.join());
+            layers.addQualityStripesTexts(invisibles);
+        }
+
+        function hideAddSign(){
+            addSign.classed("visible", false);
+            addSign.classed("invisible", true);
+        }
+
+        function showAddSign(){
+            addSign.classed("visible", true);
+            addSign.classed("invisible", false);
+        }
+
+        // SETTER n GETTER
         chart.margin = function (_) {
             if (!arguments.length) return margin;
             margin = _;
@@ -154,7 +279,7 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
             if (!arguments.length) return width;
             width = _;
             return chart;
-        };
+        }
         chart.height = function (_) {
             if (!arguments.length) return height;
             height = _;
@@ -180,13 +305,8 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
             serverUrl = _;
             return chart;
         }
-        chart.bindTo = function(_){
-            if (!arguments.length) return bindTo;
-            bindTo = _;
-            return chart;
-        };
         chart.addQualityStripe = function(column){
-            var newQualityStripe = qs()
+            var newQualityStripe = qualityStripe()
             .height(25)
             .margin({top: 0, right: 0, bottom: 0, left: 0})
             .width(750)
@@ -199,11 +319,22 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
             )
             .datum(column.values)
             .call(newQualityStripe);
+            qualityStripes[column.name] = newQualityStripe;
         }
         chart.removeQualityStripe = function(selection){
+            //first handle hidding
+            if(invisibleQualityStripes == false){
+                invisibleQualityStripes = true;
+                showAddSign();
+            }
+
             var current = selection.node();
             var translate = false;
 
+
+            //var column = current.select(".qualityViewLegendText").text()
+
+            //translate others to the right position
             d3.selectAll("g.qualityStripe").each(function(d,i) {
                 if(!translate)
                     if(current == this)
@@ -216,13 +347,18 @@ define(['d3','jquery','./qualityStripe'], function (d3, jQuery,qs) {
                 }
             });
 
+            //store removed element to invisibles
+            invisibles.push(selection.select(".qualityViewLegendText").text());
+            layers.addQualityStripesTexts(invisibles);
+            //delete qualityStripes[column];
             selection.transition().remove();
-        };
+        }
         chart.qualityIndicator = function (_) {
             if (!arguments.length) return qualityIndicator;
             qualityIndicator = _;
+            return chart;
+        }
 
-        };
         return chart;
     };
 

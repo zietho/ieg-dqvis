@@ -32,7 +32,8 @@ public class TemporalDataResource {
     @Timed
     public TemporalData readData(@QueryParam("column") List<String> columns, @QueryParam("granularity") @DefaultValue("hour") String granularity, @QueryParam("from") Optional<String> from, @QueryParam("to") Optional<String> to, @QueryParam("load") Optional<String> load, @QueryParam("indicator") List<String> indicators){
         TemporalData temporalData = new TemporalData();
-        if(indicators != null){
+        logger.info(indicators.toString());
+        if(indicators == null || indicators.isEmpty()){
             indicators = new ArrayList<String>();
             indicators.add("$.MissingData");
             indicators.add("$.InvalidData");

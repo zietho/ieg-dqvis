@@ -11,7 +11,8 @@ require(['d3','./app/qualityView' ], function(d3,qv) {
         .height(20)
         .margin({top: 0, right: 80, bottom: 30, left: 50})
         .width(800)
-        .serverUrl(serverUrl);
+        .serverUrl(serverUrl)
+        .qualityIndicator("$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp");
 
     //load all stripe and draw the quality view
     d3.json(serverUrl + "/get-data?column=all&granularity=minute", function (error, json) {

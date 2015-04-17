@@ -210,7 +210,7 @@ public class CsvDAO implements DataDAO{
     }
 
     public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators){
-
+        logger.info("chosen indicators: "+indicators.toString());
         Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
                 .rows(  new ComparisonPredicate(ComparisonPredicate.EQ,
                                 new ColumnExpression(ParentChildNode.DEPTH),
@@ -248,7 +248,7 @@ public class CsvDAO implements DataDAO{
                 for(String indicator:indicators){
                     //check if its a pattern
                     indicator = indicator.replaceAll("\\$", column);
-                    logger.info(indicator);
+                    logger.debug(indicator);
                     q += temporalObject.getDouble(indicator);
 
                 }
