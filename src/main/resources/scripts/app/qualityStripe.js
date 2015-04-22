@@ -1,5 +1,5 @@
 //function QualityBarView() {
-define(['d3'], function (d3) {
+define(['d3','colorbrewer'], function (d3, colorbrewer) {
 
     function qualityStripe() {
         var margin = {top: 0, right: 0, bottom: 0, left: 0},
@@ -15,7 +15,11 @@ define(['d3'], function (d3) {
             qualityTicks,
             columnName,
             layers = {},
-            observer;
+            observer,
+            colorScale = d3.scale.ordinal()
+                .domain([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+                .range(colorbrewer.Reds[9]);
+
 
         /* LAYERS */
         layers.border = function(){
@@ -60,10 +64,12 @@ define(['d3'], function (d3) {
             //update selection
             ticks
                 .attr("fill", function (d) {
-                    var r = 199;
-                    var g = ((1-d.quality)*r).toFixed(0);
-                    var b = g;
-                    return "rgb("+r+","+g+","+b+")";
+                    //var r = 199;
+                    //var g = ((1-d.quality)*r).toFixed(0);
+                    //var b = g;
+                    var color = d3.rgb(colorScale(1-d.quality));
+
+                    return "rgb("+color.r+","+color.g+","+color.b+")";
                 });
             //exit selection
             ticks
@@ -190,6 +196,18 @@ define(['d3'], function (d3) {
         };
         chart.redraw = function(data){
             layers.ticks(data);
+            return chart;
+        }
+
+        chart.colorScale = function(_){
+            if (!arguments.length) return colorScale;
+            colorScale = _;
+            return chart;
+        }
+
+        chart.colorPalette = function(_){
+            if (!arguments.length) return colorScale.range;
+            colorScale.range(_);
             return chart;
         }
 
