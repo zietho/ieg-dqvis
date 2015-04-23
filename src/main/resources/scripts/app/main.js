@@ -1,4 +1,4 @@
-require(['d3','./app/qualityView' ], function(d3,qv) {
+require(['d3','./app/qualityView','./app/detailview' ], function(d3,qv,dv) {
 
     var serverUrl = "http://localhost:8080";
 
@@ -17,8 +17,6 @@ require(['d3','./app/qualityView' ], function(d3,qv) {
     //load all stripe and draw the quality view
     d3.json(serverUrl + "/get-data?column=all&granularity=minute", function (error, json) {
         if (error) return console.warn(error);
-        console.log(json.columns[0]);
-
         d3.select('#visualization')
             .call(qualityView);
         qualityView.addQualityStripe(json.columns[0]);
@@ -39,7 +37,6 @@ require(['d3','./app/qualityView' ], function(d3,qv) {
 
         d3.json(requestUrl, function (error, json) {
             json.columns.forEach(function(element, index, array){
-               console.log(element);
                 qualityView.addQualityStripe(element);
             });
         })
@@ -47,5 +44,14 @@ require(['d3','./app/qualityView' ], function(d3,qv) {
 
     // ******** DETAIL VIEW *****************************
     // **************************************************
+
+    //load all stripe and draw the quality view
+    d3.json(serverUrl + "/get-data?column=h&granularity=minute&load=individually", function (error, json) {
+        if (error) return console.warn(error);
+        var detailview = dv();
+        d3.select('#visualization')
+            .datum(json)
+            .call(dv);
+    });
 
 });

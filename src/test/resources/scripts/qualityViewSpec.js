@@ -1,4 +1,4 @@
-define(['d3','jquery','app/qualityView', 'app/qualityStripe'], function(d3,jQuery,qv,qs) {
+define(['d3','jquery','app/qualityView', 'app/qualityStripe', 'colorbrewer'], function(d3,jQuery,qv,qs,colorbrewer) {
 
     describe("the the quality view", function(){
         var data,
@@ -119,30 +119,32 @@ define(['d3','jquery','app/qualityView', 'app/qualityStripe'], function(d3,jQuer
                 var qualityTick107 = d3.select(qualityTicks[0][107]);
                 var tickColor =  qualityTick107.attr("fill");
                 var quality = qualityTick107.data()[0].quality;
-                var r = 199;
-                var g = ((1-quality)*r).toFixed(0);
-                var b = g;
-                var expectedColor = "rgb("+r+","+g+","+b+")"
 
+                colorScale = d3.scale.ordinal()
+                    .domain([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+                    .range(colorbrewer.Reds[9]);
+
+                var color = d3.rgb(colorScale(1-quality));
+                var expectedColor = "rgb("+color.r+","+color.g+","+color.b+")";
+                colorbrewer.Reds[9]
                 expect(tickColor).toBe(expectedColor);
             });
 
             it("should have a time slider layer", function(){
-                var timeSlider = d3.select("#timeSlider").node();
+                var timeSlider = d3.select("#qualityTimeSlider").node();
                 expect(timeSlider).not.toBeNull();
             })
 
             it("time slider should be last child", function(){
-
                 var column = {
                     name: "anything",
                     values: data
                 };
                 qualityView.addQualityStripe(column);
 
-                var timeSlider = d3.select("#timeSlider").node();
-                var lastChild = d3.select("#allQualityStripe").select(":last-child").node();
-                expect(timeSlider.isEqualNode(lastChild)).toBe(true);
+                var timeSlider = jQuery("#qualityTimeSlider").get(0);
+                var sibling = jQuery("#allQualityStripe").next().get(0);
+                expect(timeSlider.isEqualNode(sibling)).toBe(true);
             })
 
             it("should have a hidden plus sign to add hidden channels", function(){
@@ -150,6 +152,14 @@ define(['d3','jquery','app/qualityView', 'app/qualityStripe'], function(d3,jQuer
                 expect(addSign.node().tagName).toBe("text");
                 expect(addSign.node().textContent).toBe("+");
                 expect(addSign.classed("invisible")).toBe(true);
+            })
+            it("should have a slider with a range and two handles", function(){
+                var slider = d3.select("#qualityTimeSlider")
+                expect(slider.node().tagName).toBe("g");
+                var rangeLength = slider.selectAll("rect.d3-slider-range")[0].length;
+                expect(rangeLength).toBe(1);
+                var handleLength = slider.selectAll("rect.d3-slider-handle")[0].length;
+                expect(handleLength).toBe(2);
             })
 
         });

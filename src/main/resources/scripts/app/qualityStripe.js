@@ -21,7 +21,7 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
                 .range(colorbrewer.Reds[9]);
 
 
-        /* LAYERS */
+        // LAYERS
         layers.border = function(){
            var border = qualityStripe.append("rect")
                 .classed("qualityViewBorder", true)
@@ -64,11 +64,7 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
             //update selection
             ticks
                 .attr("fill", function (d) {
-                    //var r = 199;
-                    //var g = ((1-d.quality)*r).toFixed(0);
-                    //var b = g;
                     var color = d3.rgb(colorScale(1-d.quality));
-
                     return "rgb("+color.r+","+color.g+","+color.b+")";
                 });
             //exit selection
@@ -101,6 +97,7 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
                 .classed("removeText", true);
         }
 
+        // CONSTRUCTOR
         function chart(selection) {
             selection.each(function (data) {
                 var existingChildren = d3.select(this).selectAll("g.qualityStripe")[0].length;
@@ -137,6 +134,7 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
             });
         }
 
+        // PRIVATE FUNCTIONS
         function toggleRemoveButton(){
             var removeButton = qualityStripe.select(".removeButton");
             if(removeButton.empty()) {
@@ -148,7 +146,6 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
                 if(removeButton.classed("visible")){
                     removeButton.classed("visible", false);
                     removeButton.classed("invisible", true);
-                   console.log(qualityStripe.select(".border"));
                     qualityStripe.select(".qualityViewBorder").classed("highlight", false);
 
                 }else{
@@ -159,41 +156,50 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
             }
         }
 
+        // GETTERS & SETTERS
+
         chart.margin = function (_) {
             if (!arguments.length) return margin;
             margin = _;
             return chart;
         };
+
         chart.width = function (_) {
             if (!arguments.length) return width;
             width = _;
             return chart;
         };
+
         chart.height = function (_) {
             if (!arguments.length) return height;
             height = _;
             return chart;
         };
+
         chart.x = function (_) {
             if (!arguments.length) return xValue;
             xValue = _;
             return chart;
         };
+
         chart.y = function (_) {
             if (!arguments.length) return yValue;
             yValue = _;
             return chart;
         };
+
         chart.columnName = function (_) {
             if (!arguments.length) return columnName;
             columnName = _;
             return chart;
         };
+
         chart.observer = function (_) {
             if (!arguments.length) return observer;
             observer = _;
             return chart;
         };
+
         chart.redraw = function(data){
             layers.ticks(data);
             return chart;

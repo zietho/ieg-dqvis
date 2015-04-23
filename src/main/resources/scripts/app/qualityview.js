@@ -44,7 +44,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 }
             ];
 
-
         // LAYERS
         layers.qualityStripes = function(){
             var qualityStripes = svg.append("g")
@@ -84,11 +83,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .attr("value", function(d){return d.value})
                 .text(function(d) { return d.text});
 
-
-            console.log(select.selectAll("option"));
-            select.selectAll("option").each(function(i,d){
-                console.log(i);
-            });
             return select;
         }
 
@@ -150,18 +144,15 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
         }
 
         layers.timeSlider = function(){
-
             var timeSlider = qualitySlider()
                 .value([33,66])
                 .baseHeight(25)
                 .scale(d3.scale.linear().domain([0, 100]).rangeRound([0, 730]))
                 .on("slide", function(evt, value) {
-                    console.log("value: "+value);
+                    //@TODO add hook to detailview here
                 });
 
             d3.select("#allQualityStripe").call(timeSlider);
-
-
         }
 
         function chart(selection) {
@@ -232,8 +223,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .style("opacity", 0);
         }
 
-
-
         function changeDataQualityIndicator(){
             var currentValue = d3.event.target.value;
             var palette = colorScale(d3.event.target.selectedIndex);
@@ -253,9 +242,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
         }
 
         function reAddQualityStripe(d){
-
             var columnName = d;
-            //.data(); // get stripe in question
 
             //in the invisible data quality panel remove
             var index = jQuery.inArray(columnName, invisibles);
@@ -272,7 +259,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 }
                 var a = this;
                 //add new one
-                console.log(json.columns[0]);
                 chart.addQualityStripe(json.columns[0])
 
             });
@@ -354,9 +340,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             var current = selection.node();
             var translate = false;
 
-
-            //var column = current.select(".qualityViewLegendText").text()
-
             //translate others to the right position
             d3.selectAll("g.qualityStripe").each(function(d,i) {
                 if(!translate)
@@ -373,7 +356,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             //store removed element to invisibles
             invisibles.push(selection.select(".qualityViewLegendText").text());
             layers.addQualityStripesTexts(invisibles);
-            //delete qualityStripes[column];
             selection.transition().remove();
         }
         chart.qualityIndicator = function (_) {
