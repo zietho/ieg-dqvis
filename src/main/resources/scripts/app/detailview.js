@@ -55,9 +55,6 @@ define(['d3'], function (d3) {
             var pathsEnter = paths
                 .enter()
                 .append("path")
-
-
-                pathsEnter
                 .classed("line", true)
                 .attr("id", function(d){
                     return d.name;
@@ -69,18 +66,31 @@ define(['d3'], function (d3) {
                     return color(d.name);
                 });
 
-
-
-
             paths.exit().remove();
-                //g.append("text")
-                //.attr("transform", "translate(" + (width+3) + "," + y(data[0].open) + ")")
-                //.attr("dy", ".35em")
-                //.attr("text-anchor", "start")
-                //. style("fill", function (d) {
-                //        return color(d.name);
-                //})
-                //.text(data.name);
+
+        }
+
+        layers.labels = function(){
+            var labels = g.selectAll("text.label")
+                .data(channels)
+
+            var labelsEnter = labels
+                .enter()
+                .append("text")
+                .classed("label", true)
+                .attr("transform", function(d){
+                    return "translate(" + (width+3) + "," + Y(d.values[d.values.length-1]) + ")"
+                })
+                .attr("dy", ".35em")
+                .attr("text-anchor", "start")
+                .style("fill", function (d) {
+                    return color(d.name);
+                })
+                .text(function(d){
+                    return d.name;
+                });
+
+            labels.exit().remove();
         }
 
         layers.axes = function(){
@@ -118,6 +128,7 @@ define(['d3'], function (d3) {
 
                 layers.axes();
                 layers.graph(data);
+                layers.labels();
             });
         }
 
@@ -220,6 +231,7 @@ define(['d3'], function (d3) {
             d3.json(serverUrl + "/get-data?column="+column+"&granularity=minute&load=individually", function (error, json) {
                 if (error) return console.warn(error);
                 layers.graph(json.columns[0]);
+                layers.labels();
             })
         }
 
