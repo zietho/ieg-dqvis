@@ -1,34 +1,37 @@
 //function QualityBarView() {
 define(['d3'], function (d3) {
-    var margin= {top: 20,right: 80, bottom: 30, left: 50},
-        width =  960,
-        height = 500,
-        xValue = undefined,
-        yValue = undefined,
-        xScale = d3.time.scale(),
-        yScale = d3.scale.linear(),
-        xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickSize(6, 0),
-        yAxis = d3.svg.axis().scale(yScale).orient("left"),
-        line = d3.svg.line().x(X).y(Y),
-        lineWrapper = function(d) { return line(d.values);}
-    svg = undefined;
-    gEnter = undefined;
-    g = undefined;
-    color =  d3.scale.category10(),
-        channels = new Array();
 
+    function detailView() {
 
-    function chart(selection) {
+        var margin = {top: 20, right: 80, bottom: 80, left: 50},
+            width,
+            height,
+            xValue,
+            yValue,
+            xScale = d3.time.scale(), //set x-scale and range
+            yScale = d3.scale.linear(), //set y-scale and range
+            xAxis = d3.svg.axis().scale(xScale).orient("bottom"),
+            yAxis = d3.svg.axis().scale(yScale).orient("left"),
+            line = d3.svg.line().x(X).y(Y),
+            svg,
+            g,
+            layers = {},
+            color = d3.scale.category10(),
+            channels = [],
+            serverUrl;
 
-        selection.each(function(json) {
-            channels.push(json[0]);
+        /*  LAYERS  */
 
-            // Update the x-scale.
+        layers.graph = function(data){
+
+            //first update the channels array
+            updateChannels(data);
+
+            // update x and y scales (i.e, domain + range)
             xScale
-                .domain(d3.extent(channels[0].values, xValue))
-                .range([0, width - margin.left - margin.right]);
+                .domain(d3.extent(data.values, xValue))
+                .range([0,width]);
 
-            // Update the y-scale.
             yScale
                 .domain([
                     d3.min(channels, function (d) {
@@ -38,169 +41,191 @@ define(['d3'], function (d3) {
                         return d3.max(d.values, yValue)
                     })
                 ])
-                .range([height - margin.top - margin.bottom, 0]);
+                .range([height, 0]);
 
+            var test = d3.select(".x.axis").call(xAxis);
+            var test2 = d3.select(".y.axis").call(yAxis);
 
-            // Select the svg element, if it exists.
-            svg = d3.select(this).selectAll("svg").data(channels);
-
-            // ENTER STATE  - otherwise, create skeletal
-            gEnter = svg.enter()
-                .append("svg")
-                .append("g");
-
-            gEnter.append("g").attr("class", "channels")
-                .append("path").attr("class", "line");
-            gEnter.append("g").attr("class", "x axis");
-            gEnter.append("g").attr("class", "y axis");
-
-            // UPDATE STATE
-
-            //upate outer dimensions
-            svg.attr("width", width)
-                .attr("height", height);
-
-            //update inner dimensions
-            g = svg.select("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             //update line path
-            g.selectAll(".line")
-                .attr("d", function(d) { return line(d.values);})
-                .style("stroke", function(d) { return color(d.name); });
+            var paths = g.selectAll("path.line")
+                .data(channels);
 
-            //update x-axes
-            g.select(".x.axis")
-                .attr("transform", "translate(0," + yScale.range()[0] + ")")
-                .call(xAxis);
-
-            g.select(".y.axis")
-                .call(yAxis);
-        });
-    }
-
-    // The x-accessor for the path generator; xScale ∘ xValue.
-    function X(d) {
-
-        return xScale(d.date);
-    }
-
-    // The x-accessor for the path generator; yScale ∘ yValue.
-    function Y(d) {
-        return yScale(+d.column);
-    }
-
-    chart.width = function(){
-        return width;
-    }
-
-    chart.height = function(){
-        return height;
-    }
-
-    chart.xScale = function(){
-        return xScale;
-    }
-
-    chart.yScale = function(){
-        return yScale;
-    }
-
-
-    chart.xAxis = function(){
-        return xAxis;
-    }
-
-    chart.yAxis = function(){
-        return yAxis;
-    }
-
-    chart.g = function(){
-        return g;
-    }
-
-    chart.margin = function(_) {
-        if (!arguments.length) return margin;
-        margin = _;
-        return chart;
-    };
-
-    chart.width = function(_) {
-        if (!arguments.length) return width;
-        width = _;
-        return chart;
-    };
-
-    chart.height = function(_) {
-        if (!arguments.length) return height;
-        height = _;
-        return chart;
-    };
-
-    chart.x = function(_) {
-        if (!arguments.length) return xValue;
-        xValue = _;
-        return chart;
-    };
-
-    chart.y = function(_) {
-        if (!arguments.length) return yValue;
-        yValue = _;
-        return chart;
-    };
-
-    chart.column = function(_){
-        if (!arguments.length) return yValue;
-        column = _;
-        return chart;
-    }
-
-    chart.line = function(){
-        return line;
-    }
-
-    chart.svg = function(){
-        return svg;
-    }
-
-    chart.lineWrapper = function(){
-        return lineWrapper;
-    }
-
-    chart.gEnter = function(){
-        return gEnter;
-    }
-
-    chart.update = function(){
-
-    }
-
-    chart.addColumn = function(column){
-
-        d3.json(serverUrl+"/get-data?column="+column.name, function(error, json) {
-            if (error) return console.warn(error);
-            channels.push(json.columns[0]);
-
-            xScale
-                .domain(d3.extent(channels[0].values, xValue))
-
-            yScale.domain([
-                d3.min(channels, function (d) {
-                    return d3.min(d.values, yValue)
-                }),
-                d3.max(channels, function (d) {
-                    return d3.max(d.values, yValue)
-                })
-            ]);
-
-            g.selectAll(".line")
-                .data(channels)
+            //add new ones
+            var pathsEnter = paths
                 .enter()
                 .append("path")
-                .attr("class", "line")
-                .attr("d", function(d) { return line(d.values);})
-                .style("stroke", function(d) { return color(d.name); });
-        })
+
+
+                pathsEnter
+                .classed("line", true)
+                .attr("id", function(d){
+                    return d.name;
+                })
+                .attr("d", function (d) {
+                    return line(d.values);
+                })
+                .style("stroke", function (d) {
+                    return color(d.name);
+                });
+
+
+
+
+            paths.exit().remove();
+                //g.append("text")
+                //.attr("transform", "translate(" + (width+3) + "," + y(data[0].open) + ")")
+                //.attr("dy", ".35em")
+                //.attr("text-anchor", "start")
+                //. style("fill", function (d) {
+                //        return color(d.name);
+                //})
+                //.text(data.name);
+        }
+
+        layers.axes = function(){
+            //x-axis
+            g.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")");
+
+            //y-axis
+            g.append("g")
+                .attr("class", "y axis")
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("dy", ".71em")
+                .style("text-anchor", "end")
+                .text("Value");
+        }
+
+        function chart(selection) {
+            selection.each(function (data) {
+
+                // Select the svg element, if it exists.
+                svg = d3.select(this)
+                    .append("svg")
+                    .attr("id", "detailView")
+                    .attr("width", width+margin.right)
+                    .attr("height", height+margin.bottom);
+
+                //update inner dimensions
+                g = svg
+                    .append("g")
+                    .attr("id","detailViewCanvas")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                layers.axes();
+                layers.graph(data);
+            });
+        }
+
+        function updateChannels(data){
+
+            var contained = false;
+            channels.forEach(function(element,index,array){
+                  if(element.name==data.name) {
+                      element.values = data.values;
+                      contained = true;
+                  }
+            });
+
+            if(!contained){
+                channels.push(data);
+            }
+        }
+
+        // The x-accessor for the path generator; xScale ∘ xValue.
+        function X(d) {
+            return xScale(d.date);
+        }
+
+        // The x-accessor for the path generator; yScale ∘ yValue.
+        function Y(d) {
+            return yScale(+d.column);
+        }
+
+        chart.width = function () {
+            return width;
+        }
+
+        chart.height = function () {
+            return height;
+        }
+
+        chart.xScale = function () {
+            return xScale;
+        }
+
+        chart.yScale = function () {
+            return yScale;
+        }
+
+        chart.xAxis = function () {
+            return xAxis;
+        }
+
+        chart.yAxis = function () {
+            return yAxis;
+        }
+
+        chart.g = function () {
+            return g;
+        }
+
+        chart.margin = function (_) {
+            if (!arguments.length) return margin;
+            margin = _;
+            return chart;
+        };
+
+        chart.width = function (_) {
+            if (!arguments.length) return width;
+            width = _;
+            return chart;
+        };
+
+        chart.height = function (_) {
+            if (!arguments.length) return height;
+            height = _;
+            return chart;
+        };
+
+        chart.x = function (_) {
+            if (!arguments.length) return xValue;
+            xValue = _;
+            return chart;
+        };
+
+        chart.y = function (_) {
+            if (!arguments.length) return yValue;
+            yValue = _;
+            return chart;
+        };
+
+        chart.column = function (_) {
+            if (!arguments.length) return yValue;
+            column = _;
+            return chart;
+        }
+
+        chart.serverUrl = function (_) {
+            if (!arguments.length) return serverUrl;
+            serverUrl = _;
+            return chart;
+        }
+
+        chart.addColumn = function (column) {
+            d3.json(serverUrl + "/get-data?column="+column+"&granularity=minute&load=individually", function (error, json) {
+                if (error) return console.warn(error);
+                layers.graph(json.columns[0]);
+            })
+        }
+
+        return chart;
     }
 
-    return chart;
-}
+    return detailView;
+
+});

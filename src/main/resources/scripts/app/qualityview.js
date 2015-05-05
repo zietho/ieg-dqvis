@@ -159,7 +159,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             //add new svg
             svg = selection.append("svg");
             svg.attr("width", width)
-                .attr("height", 600)
+                .attr("height", height)
                 .attr("id", "qualityView");
 
             //add layers

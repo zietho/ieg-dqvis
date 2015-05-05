@@ -8,9 +8,9 @@ require(['d3','./app/qualityView','./app/detailview' ], function(d3,qv,dv) {
 
     //create quality view
     var qualityView = qv()
-        .height(20)
         .margin({top: 0, right: 80, bottom: 30, left: 50})
         .width(800)
+        .height(300)
         .serverUrl(serverUrl)
         .qualityIndicator("$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp");
 
@@ -44,14 +44,38 @@ require(['d3','./app/qualityView','./app/detailview' ], function(d3,qv,dv) {
 
     // ******** DETAIL VIEW *****************************
     // **************************************************
+    var detailView = dv()
+            .x(function(d) { return new Date(+d.date);})
+            .y(function(d) { return +d.column;})
+            .height(300)
+            .width(800)
+            .serverUrl(serverUrl);
+
+
+    //d3.select("#visualization")
+    //    .datum(json.columns[0].values)
+    //    .call(timeSliderView);
 
     //load all stripe and draw the quality view
     d3.json(serverUrl + "/get-data?column=h&granularity=minute&load=individually", function (error, json) {
         if (error) return console.warn(error);
         var detailview = dv();
-        d3.select('#visualization')
-            .datum(json)
-            .call(dv);
+        var data = d3.select("#visualization")
+            .datum(json.columns[0]);
+        data.call(detailView);
+        detailView.addColumn("w")
+        detailView.addColumn("m1")
+
     });
 
+
+    //detailView.addColumn("h");
+    //detailView.addColumn("m1");
+//    detailView.addColumn("h");
+
+
+    //var timeSliderView = TimeSliderView()
+    //    +                            .width(timeSeriesView.width)
+    //+                            .timeSeriesView(timeSeriesView)
+    //+                            .sliderId("#slider");
 });

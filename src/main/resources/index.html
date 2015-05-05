@@ -11,10 +11,17 @@
         font: 10px sans-serif;
     }
 
+    path {
+        stroke: steelblue;
+        stroke-width: 2;
+        fill: none;
+    }
+
     .axis path,
     .axis line {
         fill: none;
-        stroke: #000;
+        stroke: grey;
+        stroke-width: 1;
         shape-rendering: crispEdges;
     }
 
@@ -23,14 +30,7 @@
         font-weight: bold;
     }
 
-    #visualization{
-        float:left;
 
-    }
-
-    .x.axis path {
-        display: none;
-    }
 
     .line {
         fill: none;
@@ -88,11 +88,6 @@
         margin-top:100px;
     }
 
-
-    #individualQualityStripes{
-
-    }
-
     .invisible{
         display:none;
     }
@@ -148,14 +143,11 @@
     }
 
 
-
 </style>
 <body>
 <h1>Data Quality Visualization</h1>
 <h2>powered by <a href="http://d3js.org/">d3.js</a>, <a href="https://dropwizard.github.io/dropwizard/">Dropwizzard</a> and <a href="https://github.com/ieg-vienna/TimeBench">TimeBench</a></h2>
-<p id="visualization"/>
-<ul id="columns"></ul>
-<div id="slider"></div>
+<div id="visualization"/>
 
 <script data-main="app" src="scripts/lib/require.js"></script>
 
