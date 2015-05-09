@@ -40,6 +40,8 @@ public class TemporalDataResource {
             indicators.add("MissingTimeStamp");
         }
 
+
+
         //loading a single column
         if(!columns.isEmpty() && columns.size()==1) {
             if(columns.get(0).equals("all")) {

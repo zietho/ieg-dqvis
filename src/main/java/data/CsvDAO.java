@@ -237,10 +237,10 @@ public class CsvDAO implements DataDAO{
             TemporalObject temporalObject = aggregatedDataset.getTemporalObject(id);
             GenericTemporalElement temporalElement = aggregatedDataset.getTemporalElement(id);
             date = temporalElement.getInf();
-           // missingTimestamp = temporalObject.getDouble("MissingTimeStamp");
+
+            // missingTimestamp = temporalObject.getDouble("MissingTimeStamp");
             quality = 0;
             mean = 0;
-
 
             //iterate over all the different columns
             for(String column : columns) {
@@ -250,7 +250,6 @@ public class CsvDAO implements DataDAO{
                     indicator = indicator.replaceAll("\\$", column);
                     logger.debug(indicator);
                     q += temporalObject.getDouble(indicator);
-
                 }
 
                 quality += q/indicators.size();
@@ -260,8 +259,6 @@ public class CsvDAO implements DataDAO{
 
             //logger.debug("before : "+quality + " timestampt: "+missingTimestamp+ "with size: "+columns.size());
 
-
-
             quality = (quality/columns.size());
             mean = mean/columns.size();
             TemporalValue temporalValue = new TemporalValue(date, mean, quality);
@@ -269,6 +266,26 @@ public class CsvDAO implements DataDAO{
         }
 
         return  temporalColumn;
+    }
+
+    public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators, int[] range){
+        //first, get all available values
+        TemporalColumn temporalColumn = readAggregated(columns, granularity, indicators);
+        //retrieve size of all values and the lower and upper bound of this number
+
+        int numberOfElements = temporalColumn.getValues().size();
+        logger.info("before"+numberOfElements);
+        if(range != null) {
+            int lowerBound = (int) Math.round(numberOfElements * ((double) range[0] / 100));
+            int upperBound = (int) Math.round(numberOfElements * ((double) range[1] / 100));
+
+            //slice the data and only return the requested data slice instead of the full range of the data - +1 cauz toIndex is excluded by default
+            temporalColumn.setValues(temporalColumn.getValues().subList(lowerBound, upperBound+1));
+        }
+
+        logger.info("after"+temporalColumn.getValues().size());
+
+        return temporalColumn;
     }
 
     public String getDataPath() {

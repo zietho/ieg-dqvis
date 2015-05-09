@@ -54,6 +54,8 @@ public interface DataDAO{
 
     public TemporalColumn readAggregated(int granularity, List<String> indicators);
 
+    public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators, int[] range);
+
     public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators);
 
     public TemporalColumn readAggregated(List<String> columns, int granularity);

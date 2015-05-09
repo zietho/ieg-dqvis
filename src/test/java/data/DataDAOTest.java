@@ -139,6 +139,24 @@ public abstract class DataDAOTest {
     }
 
     @Test
+    public void readAggregatedDataSliceTest() throws Exception{
+        List<String> indicators = new ArrayList<String>();
+        //add all
+        indicators.add("$.MissingData");
+        indicators.add("$.InvalidData");
+        indicators.add("MissingTimeStamp");
+
+        dataDAO.setAggregatedDataset((GranularityAggregationTree) dataDAO.aggregate());
+        List<String> columns = new ArrayList<String>();
+        columns.add("h");
+        TemporalColumn temporalColumn = dataDAO.readAggregated(columns, 2, indicators, new int[]{33,66});
+        logger.info("data slice");
+        logger.info("size: "+temporalColumn.getValues().size());
+        assertTrue(temporalColumn.getValues().size()>1);
+
+    }
+
+    @Test
     public void testReadAggregatedWithColumnGranularityAndIndicators() throws Exception{
 
         //agregated
