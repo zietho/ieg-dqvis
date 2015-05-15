@@ -25,24 +25,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             colorScale = d3.scale.ordinal()
                 .domain([0,1,2,3])
                 .range([colorbrewer.Reds[9], colorbrewer.Blues[9], colorbrewer.Greens[9], colorbrewer.Purples[9]]),
-            indicators =[
-                {
-                    value: "$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp",
-                    text: "All"
-                },
-                {
-                    value: "$.MissingData",
-                    text: "Missing Values"
-                },
-                {
-                    value: "$.InvalidData",
-                    text: "Invalid Values"
-                },
-                {
-                    value: "MissingTimeStamp",
-                    text: "Missing Timestamp"
-                }
-            ];
+            indicators = [];
 
         // LAYERS
         layers.qualityStripes = function(){
@@ -135,7 +118,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .attr("y", function(d,i){
                     return i*30;
                 })
-                .classed("invisbleQualityStripe", true)
+                .classed("invisbleQualityStripe", true);
 
             //exit selection
             invisibleStripeTexts
@@ -361,6 +344,29 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
         chart.qualityIndicator = function (_) {
             if (!arguments.length) return qualityIndicator;
             qualityIndicator = _;
+            return chart;
+        }
+
+        chart.getTooltip = function () {
+            return tooltip;
+        }
+
+        chart.getColourPaletteOfIndicator = function(indicator){
+
+            var palette = [];
+
+            indicators.forEach(function(element,index,array){
+                if(element.value == indicator){
+                    palette = colorScale(index);
+                }
+            });
+
+            return palette;
+        }
+
+        chart.setIndicators = function(_){
+            if(!arguments.length) return indicators;
+            indicators = _;
             return chart;
         }
 

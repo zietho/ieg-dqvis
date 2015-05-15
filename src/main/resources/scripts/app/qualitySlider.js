@@ -37,10 +37,10 @@ define(['d3','jquery'], function (d3, jQuery) {
                 value = value || scale.domain()[0];
 
                 //set drag behavior
-                var drag = d3.behavior.drag();
-                drag.on("dragstart", onDragStart);
-                drag.on("drag", onDragHorizontal);
-                drag.on('dragend', onDragEnd);
+                var drag = d3.behavior.drag()
+                    .on("dragstart", onDragStart)
+                    .on("drag", onDragHorizontal)
+                    .on("dragend", onDragEnd);
 
                 var sliderGroup = d3.select("#qualityStripes")
                     .insert("g", "#individualQualityStripes")
@@ -79,6 +79,8 @@ define(['d3','jquery'], function (d3, jQuery) {
                 rangeValue = scale.invert(range.attr("x"));
 
                 function onDragHorizontal() {
+
+                    console.log("test");
                     if(xDiff==0) {
                         xDiff = d3.event.x - parseInt(d3.select(this).attr("x"));
                     }

@@ -152,8 +152,7 @@ public abstract class DataDAOTest {
         TemporalColumn temporalColumn = dataDAO.readAggregated(columns, 2, indicators, new int[]{33,66});
         logger.info("data slice");
         logger.info("size: "+temporalColumn.getValues().size());
-        assertTrue(temporalColumn.getValues().size()>1);
-
+        assertTrue(temporalColumn.getValues().size()==2);
     }
 
     @Test

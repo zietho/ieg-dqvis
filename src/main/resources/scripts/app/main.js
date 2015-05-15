@@ -12,7 +12,29 @@ require(['d3','./app/qualityView','./app/detailview' ], function(d3,qv,dv) {
         .width(800)
         .height(300)
         .serverUrl(serverUrl)
-        .qualityIndicator("$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp");
+        .qualityIndicator("$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp")
+        .setIndicators([
+            {
+                value: "$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp",
+                text: "All",
+                css: "allIndicators"
+            },
+            {
+                value: "$.MissingData",
+                text: "Missing Values",
+                css: "missingValues"
+            },
+            {
+                value: "$.InvalidData",
+                text: "Invalid Values",
+                css: "invalidValues"
+            },
+            {
+                value: "MissingTimeStamp",
+                text: "Missing Timestamp",
+                css: "missingTimestamp"
+            }
+        ]);
 
     //load all stripe and draw the quality view
     d3.json(serverUrl + "/get-data?column=all&granularity=minute", function (error, json) {
@@ -44,29 +66,29 @@ require(['d3','./app/qualityView','./app/detailview' ], function(d3,qv,dv) {
 
     // ******** DETAIL VIEW *****************************
     // **************************************************
-    var detailView = dv()
-            .x(function(d) { return new Date(+d.date);})
-            .y(function(d) { return +d.column;})
-            .height(300)
-            .width(800)
-            .serverUrl(serverUrl);
-
+    //var detailView = dv()
+    //        .x(function(d) { return new Date(+d.date);})
+    //        .y(function(d) { return +d.column;})
+    //        .height(300)
+    //        .width(800)
+    //        .serverUrl(serverUrl);
+    //
 
     //d3.select("#visualization")
     //    .datum(json.columns[0].values)
     //    .call(timeSliderView);
 
-    //load all stripe and draw the quality view
-    d3.json(serverUrl + "/get-data?column=h&granularity=minute&load=individually", function (error, json) {
-        if (error) return console.warn(error);
-        var detailview = dv();
-        var data = d3.select("#visualization")
-            .datum(json.columns[0]);
-        data.call(detailView);
-        detailView.addColumn("w")
-        detailView.addColumn("m1")
-
-    });
+    ////load all stripe and draw the quality view
+    //d3.json(serverUrl + "/get-data?column=h&granularity=minute&load=individually", function (error, json) {
+    //    if (error) return console.warn(error);
+    //    var detailview = dv();
+    //    var data = d3.select("#visualization")
+    //        .datum(json.columns[0]);
+    //    data.call(detailView);
+    //    detailView.addColumn("w")
+    //    detailView.addColumn("m1")
+    //
+    //});
 
 
     //detailView.addColumn("h");

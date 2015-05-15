@@ -4,6 +4,7 @@ package data;
  * Created by evolution on 16/07/2014.
  */
 
+import core.AffectedChannel;
 import core.TemporalColumn;
 import core.TemporalData;
 import core.TemporalValue;
@@ -230,6 +231,13 @@ public class CsvDAO implements DataDAO{
         int id;
         double mean = 0, quality, missingTimestamp, q = 0, includeMissingValues, includeInvalidValues, includeMissingTimestamps;
         long date;
+        List<AffectedChannel> affectedChannels;
+        List<String> affectingIndicators = new ArrayList<String>();
+        String mostImpactingColumn;
+        double mostImpactingColumnValue;
+        String mostImpactingIndicator = "";
+        double mostImpactingIndicatorValue;
+        double qualityByIndicator;
 
         //TODO - unsorted!*/
         while(iterator.hasNext()) {
@@ -242,28 +250,69 @@ public class CsvDAO implements DataDAO{
             quality = 0;
             mean = 0;
 
+
+
+            mostImpactingColumn = "";
+            mostImpactingColumnValue = 0;
+            affectedChannels = new ArrayList<AffectedChannel>();
+
             //iterate over all the different columns
             for(String column : columns) {
 
+                mostImpactingIndicator= "";
+                mostImpactingIndicatorValue = 0;
+                affectingIndicators = new ArrayList<String>();
+
                 for(String indicator:indicators){
                     //check if its a pattern
+                    String in = indicator;
                     indicator = indicator.replaceAll("\\$", column);
-                    logger.debug(indicator);
-                    q += temporalObject.getDouble(indicator);
+                    qualityByIndicator = temporalObject.getDouble(indicator);
+
+                    if(qualityByIndicator>mostImpactingIndicatorValue){
+                        mostImpactingIndicator = in;
+                        mostImpactingIndicatorValue = qualityByIndicator;
+                    }
+                    q += qualityByIndicator;
+
+                    if(qualityByIndicator>0){
+                        if(!affectingIndicators.contains(in)) {
+                            affectingIndicators.add(in);
+                        }
+                    }
+
                 }
 
-                quality += q/indicators.size();
+
+
+                double columnQuality = q/indicators.size();
+                quality += columnQuality;
+
+                //retrieve most impacting channel
+                if(columnQuality>mostImpactingColumnValue){
+                    mostImpactingColumn = column;
+                    mostImpactingColumnValue = columnQuality;
+                }
+
+                //add channels with data deficiencies
+                if(columnQuality>0){
+                    affectedChannels.add(new AffectedChannel(column, mostImpactingIndicator));
+                }
+
                 q = 0; //reset local aggregated quality
                 mean += temporalObject.getDouble(column);
+
+
             }
 
-            //logger.debug("before : "+quality + " timestampt: "+missingTimestamp+ "with size: "+columns.size());
-
+            AffectedChannel affectedChannel = new AffectedChannel(mostImpactingColumn, mostImpactingIndicator);
             quality = (quality/columns.size());
             mean = mean/columns.size();
-            TemporalValue temporalValue = new TemporalValue(date, mean, quality);
+            TemporalValue temporalValue = new TemporalValue(date, mean, quality, affectedChannels, affectingIndicators);
             temporalColumn.add(temporalValue);
         }
+
+
 
         return  temporalColumn;
     }
