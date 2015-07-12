@@ -142,6 +142,25 @@
         font-size: 1em;
     }
 
+    div.tooltip ul{
+       margin:5px;
+       padding:0px;
+    }
+
+    div.tooltip ul li{
+        overflow: hidden;
+        display: inline;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    div.tooltip ul li:after {
+        content: ", ";
+    }
+
+    div.tooltip ul li:last-child:after {
+        content: "";
+    }
+
 
 </style>
 <body>

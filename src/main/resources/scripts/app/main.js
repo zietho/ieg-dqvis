@@ -1,4 +1,4 @@
-require(['d3','./app/qualityView','./app/detailview' ], function(d3,qv,dv) {
+require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
 
     var serverUrl = "http://localhost:8080";
 
@@ -13,28 +13,31 @@ require(['d3','./app/qualityView','./app/detailview' ], function(d3,qv,dv) {
         .height(300)
         .serverUrl(serverUrl)
         .qualityIndicator("$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp")
-        .setIndicators([
+        .indicators([
             {
                 value: "$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp",
                 text: "All",
-                css: "allIndicators"
+                shortText: "All"
             },
             {
                 value: "$.MissingData",
                 text: "Missing Values",
-                css: "missingValues"
+                shortText: "MV"
             },
             {
                 value: "$.InvalidData",
                 text: "Invalid Values",
-                css: "invalidValues"
+                shortText: "IV"
             },
             {
                 value: "MissingTimeStamp",
                 text: "Missing Timestamp",
-                css: "missingTimestamp"
+                shortText: "MT"
             }
-        ]);
+        ])
+        .sliderCallBack(function(evt, value){
+            detailView.setRange(value);
+        })
 
     //load all stripe and draw the quality view
     d3.json(serverUrl + "/get-data?column=all&granularity=minute", function (error, json) {
@@ -64,40 +67,24 @@ require(['d3','./app/qualityView','./app/detailview' ], function(d3,qv,dv) {
         })
     });
 
-    // ******** DETAIL VIEW *****************************
-    // **************************************************
-    //var detailView = dv()
-    //        .x(function(d) { return new Date(+d.date);})
-    //        .y(function(d) { return +d.column;})
-    //        .height(300)
-    //        .width(800)
-    //        .serverUrl(serverUrl);
-    //
+     //******** DETAIL VIEW *****************************
+     //**************************************************
+    var detailView = dv()
+            .x(function(d) { return new Date(+d.date);})
+            .y(function(d) { return +d.column;})
+            .height(300)
+            .width(800)
+            .serverUrl(serverUrl);
 
-    //d3.select("#visualization")
-    //    .datum(json.columns[0].values)
-    //    .call(timeSliderView);
+    //load all stripe and draw the quality view
+    d3.json(serverUrl + "/get-data?column=h&granularity=minute&load=individually", function (error, json) {
+        if (error) return console.warn(error);
+        var data = d3.select("#visualization")
+            .datum(json.columns[0]);
+        data.call(detailView);
+    });
 
-    ////load all stripe and draw the quality view
-    //d3.json(serverUrl + "/get-data?column=h&granularity=minute&load=individually", function (error, json) {
-    //    if (error) return console.warn(error);
-    //    var detailview = dv();
-    //    var data = d3.select("#visualization")
-    //        .datum(json.columns[0]);
-    //    data.call(detailView);
-    //    detailView.addColumn("w")
-    //    detailView.addColumn("m1")
-    //
-    //});
+    detailView.addColumn("w");
+    detailView.addColumn("m1");
 
-
-    //detailView.addColumn("h");
-    //detailView.addColumn("m1");
-//    detailView.addColumn("h");
-
-
-    //var timeSliderView = TimeSliderView()
-    //    +                            .width(timeSeriesView.width)
-    //+                            .timeSeriesView(timeSeriesView)
-    //+                            .sliderId("#slider");
 });

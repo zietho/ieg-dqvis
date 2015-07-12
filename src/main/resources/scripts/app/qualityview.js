@@ -25,7 +25,8 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             colorScale = d3.scale.ordinal()
                 .domain([0,1,2,3])
                 .range([colorbrewer.Reds[9], colorbrewer.Blues[9], colorbrewer.Greens[9], colorbrewer.Purples[9]]),
-            indicators = [];
+            indicators = [],
+            sliderCallBack;
 
         // LAYERS
         layers.qualityStripes = function(){
@@ -132,7 +133,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .baseHeight(25)
                 .scale(d3.scale.linear().domain([0, 100]).rangeRound([0, 730]))
                 .on("slide", function(evt, value) {
-                    //@TODO add hook to detailview here
+                    sliderCallBack(evt, value);
                 });
 
             d3.select("#allQualityStripe").call(timeSlider);
@@ -364,9 +365,15 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             return palette;
         }
 
-        chart.setIndicators = function(_){
+        chart.indicators = function(_){
             if(!arguments.length) return indicators;
             indicators = _;
+            return chart;
+        }
+
+        chart.sliderCallBack = function(_){
+            if(!arguments.length) return sliderCallBack;
+            sliderCallBack = _;
             return chart;
         }
 

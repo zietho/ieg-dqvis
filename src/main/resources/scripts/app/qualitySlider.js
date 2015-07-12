@@ -79,8 +79,6 @@ define(['d3','jquery'], function (d3, jQuery) {
                 rangeValue = scale.invert(range.attr("x"));
 
                 function onDragHorizontal() {
-
-                    console.log("test");
                     if(xDiff==0) {
                         xDiff = d3.event.x - parseInt(d3.select(this).attr("x"));
                     }

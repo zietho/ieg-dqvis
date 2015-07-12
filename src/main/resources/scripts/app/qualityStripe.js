@@ -118,7 +118,7 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
                     .attr("width", width+50)
                     .attr("height", height)
                     .attr("transform", "translate(0,"+existingChildren*30+")")
-                    .attr("id", "qualityStripe."+columnName)
+                    .attr("id", "qualityStripe-"+columnName)
                     .on("click", toggleRemoveButton);
 
                 //draw border
@@ -159,77 +159,81 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
         }
 
         function showTickDetails(){
-            var tooltip = observer.getTooltip();
-            var data = d3.select(this).data()[0];
-            var date = new Date(data.date);
-            var dateString = date.getDate()+"."+date.getMonth()+"."+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes();
+            var test = d3.select(this);
+            var data = d3.select(this).data()[0],
+                date = new Date(data.date),
+                dateString = date.getDate()+"."+date.getMonth()+"."+date.getFullYear()+" "+date.getHours()+":"+date.getMinutes(),
+                tooltip = observer.getTooltip(),
+                currentQualityIndicator = getIndicatorShortText(observer.qualityIndicator()),
+                left = d3.event !== null ? d3.event.pageX : 0,
+                top = d3.event !== null ? d3.event.pageY : 0;
 
-            //clear element first
-            tooltip.html("");
 
+            //fade tooltip in
             tooltip
+                .html("") //clear old contents
                 .transition()
                 .duration(200)
                 .style("opacity", .9)
-                .style("left", (d3.event.pageX) + "px")
-                .style("top", (d3.event.pageY - 28) + "px");
+                .style("left", (left) + "px")
+                .style("top", (top - 28) + "px");
 
+            //build tooltip contents
             tooltip
                 .append("div")
-                .text(dateString);
-
-
-            if(columnName == "all"){
-                //tick for all channels > C1, C2, with classes of css
-                console.log("in");
-                //just throu in all!
-                var channels =  tooltip.append("ul")
-                        .selectAll("li")
-                        .data(data.affectedChannels)
-                        .enter()
-                        .append("li")
-                        .style("color", function(d){
-                            return getIndicatorColor(d.indicator);
-                        })
-                        .text(function(d){
-                            return d.name;
-                        })
-
-            }else{
-
-
-
-                //get seperation info from OBSERVER!!!!
-
-                //channel a specific channel
-
-                //with all quality indicators
-                //display color coded I, M, Q with CSS classes
-
-                //with a certain quality indicator
-                //display NOTHINg
-            }
-        }
-
-        function getIndicatorColor(indicator){
-            var palette = observer.getColourPaletteOfIndicator(indicator);
-            tmpColorScale = d3.scale.ordinal()
-                .domain([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-                .range(palette);
-            var color = d3.rgb(tmpColorScale(0.5));
-            return "rgb("+color.r+","+color.g+","+color.b+")";
+                .text(dateString)
+                .append("ul")
+                .selectAll("li")
+                .data(data.affectedChannels)
+                .enter()
+                .append("li")
+                .style("color", function(d){
+                    if(columnName == "all" && currentQualityIndicator.toLowerCase()!=="all"){
+                        return "white";
+                    }else {
+                        return getIndicatorColor(d.indicator);
+                    }
+                })
+                .text(function(d){
+                    if(columnName == "all") {
+                        return d.name; //channel name
+                    }else{
+                        if(currentQualityIndicator.toLowerCase()==="all") {
+                            return getIndicatorShortText(d.indicator); //indicator short text
+                        }else{
+                            return "";
+                        }
+                    }
+                });
         }
 
         function hideTickDetails(){
             observer.getTooltip()
                 .transition()
                 .duration(500)
-                .style("opacity", 0);
-
-
-
-
+                .style("opacity", 0)
         }
+
+        function getIndicatorColor(indicator){
+            var palette = observer.getColourPaletteOfIndicator(indicator);
+            tmpColorScale = colorScale.range(palette);
+            var color = d3.rgb(tmpColorScale(0.5));
+            return "rgb("+color.r+","+color.g+","+color.b+")";
+        }
+
+        function getIndicatorShortText(indicator){
+            var indicators = observer.indicators();
+
+            var shortText = "";
+            indicators.forEach(function(element, index, array){
+                if (element.value === indicator) {
+                    shortText= element.shortText;
+                }
+            });
+
+            return shortText;
+        }
+
         // GETTERS & SETTERS
 
         chart.margin = function (_) {

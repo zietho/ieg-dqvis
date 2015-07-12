@@ -22,14 +22,10 @@ define(['d3'], function (d3) {
 
         /*  LAYERS  */
 
-        layers.graph = function(data){
-
-            //first update the channels array
-            updateChannels(data);
-
+        layers.graph = function(){
             // update x and y scales (i.e, domain + range)
             xScale
-                .domain(d3.extent(data.values, xValue))
+                .domain(d3.extent(channels[0].values, xValue))
                 .range([0,width]);
 
             yScale
@@ -43,8 +39,9 @@ define(['d3'], function (d3) {
                 ])
                 .range([height, 0]);
 
-            var test = d3.select(".x.axis").call(xAxis);
-            var test2 = d3.select(".y.axis").call(yAxis);
+            //update axes
+            d3.select(".x.axis").call(xAxis);
+            d3.select(".y.axis").call(yAxis);
 
 
             //update line path
@@ -59,12 +56,18 @@ define(['d3'], function (d3) {
                 .attr("id", function(d){
                     return d.name;
                 })
+                //.transition()
                 .attr("d", function (d) {
                     return line(d.values);
                 })
                 .style("stroke", function (d) {
                     return color(d.name);
                 });
+
+            d3.transition().selectAll("path.line")
+                .attr("d", function (d) {
+                    return line(d.values);
+                })
 
             paths.exit().remove();
 
@@ -112,7 +115,6 @@ define(['d3'], function (d3) {
 
         function chart(selection) {
             selection.each(function (data) {
-
                 // Select the svg element, if it exists.
                 svg = d3.select(this)
                     .append("svg")
@@ -127,8 +129,11 @@ define(['d3'], function (d3) {
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
                 layers.axes();
-                layers.graph(data);
+
+                updateChannels(data);
+                layers.graph();
                 layers.labels();
+
             });
         }
 
@@ -230,10 +235,47 @@ define(['d3'], function (d3) {
         chart.addColumn = function (column) {
             d3.json(serverUrl + "/get-data?column="+column+"&granularity=minute&load=individually", function (error, json) {
                 if (error) return console.warn(error);
-                layers.graph(json.columns[0]);
+
+                //change columns here.....
+                updateChannels(json.columns[0]);
+                layers.graph(channels);
                 layers.labels();
             })
+
         }
+
+        chart.setRange = function (range){
+            var min = range[0];
+            var max = range[1];
+            var url = serverUrl + "/get-data?"; //start building the URL
+
+            //Channels/Columns
+            channels.forEach(function(element,index,array){
+                url+= "column="+element.name+"&";
+            });
+
+            //From - To
+            if(min>=0 && min < max) {
+                url += "from="+min;
+            }
+            if(min<max && max<=100){
+                url += "&to="+max;
+            }
+
+            url += "&granularity=auto&load=individually";
+
+            //load all stripe and draw the quality view
+            d3.json(url, function (error, json) {
+                if (error) return console.warn(error);
+
+                json.columns.forEach(function(element,index,array){
+                   updateChannels(element);
+                });
+
+                //update data
+                layers.graph();
+            });
+         }
 
         return chart;
     }
