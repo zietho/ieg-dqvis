@@ -9,6 +9,10 @@ public class AffectedChannel {
     private String name;
     private String indicator;
 
+    public AffectedChannel(){
+        //jackson
+    }
+
     public AffectedChannel(String name, String indicator){
         this.name = name;
         this.indicator = indicator;

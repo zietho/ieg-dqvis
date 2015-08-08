@@ -18,7 +18,11 @@ define(['d3'], function (d3) {
             layers = {},
             color = d3.scale.category10(),
             channels = [],
-            serverUrl;
+            serverUrl,
+            active = false,
+            draggedChannel,
+            min,
+            max;
 
         /*  LAYERS  */
 
@@ -62,7 +66,10 @@ define(['d3'], function (d3) {
                 })
                 .style("stroke", function (d) {
                     return color(d.name);
-                });
+                })
+                .on("click", function(d){
+                    d3.select(this).attr("stroke","blue");
+                })
 
             d3.transition().selectAll("path.line")
                 .attr("d", function (d) {
@@ -92,6 +99,11 @@ define(['d3'], function (d3) {
                 .text(function(d){
                     return d.name;
                 });
+
+            d3.transition().selectAll("text.label")
+                .attr("transform", function(d){
+                    return "translate(" + (width+3) + "," + Y(d.values[d.values.length-1]) + ")"
+                })
 
             labels.exit().remove();
         }
@@ -134,8 +146,39 @@ define(['d3'], function (d3) {
                 layers.graph();
                 layers.labels();
 
+
+                svg
+                    .on("mouseover", function(node) {
+                        overDetailView(node);
+                    })
+                    .on("mouseup", function(node) {
+                        outDetailView(node);
+                    });
+
             });
         }
+
+        function overDetailView(d) {
+            active = true;
+            draggedChannel = d3.select(".dragging");
+
+        }
+
+        function outDetailView(d) {
+            active = false;
+
+            if(draggedChannel[0][0]!=null) {
+                var id = draggedChannel.attr("id");
+                if (id.indexOf("qualityStripe") > -1) {
+                    var channel = id.split("-")[1];
+                    chart.addColumn(channel);
+                    console.info("channel "+channel+" added");
+                    draggedChannel = null;
+                }
+            }
+
+        }
+
 
         function updateChannels(data){
 
@@ -150,6 +193,16 @@ define(['d3'], function (d3) {
             if(!contained){
                 channels.push(data);
             }
+        }
+
+
+        function loadChannel(url, callback){
+            d3.json(url, function (error, json) {
+                if (error) return console.warn(error);
+                callback(json);
+                layers.graph(channels);
+                layers.labels();
+            })
         }
 
         // The x-accessor for the path generator; xScale ∘ xValue.
@@ -233,20 +286,24 @@ define(['d3'], function (d3) {
         }
 
         chart.addColumn = function (column) {
-            d3.json(serverUrl + "/get-data?column="+column+"&granularity=minute&load=individually", function (error, json) {
-                if (error) return console.warn(error);
+            if(min>=0 && min<100 & max>0 && max<=100){
+                var url = serverUrl
+                            + "/get-data?column="+column
+                            + "&from="+min
+                            + "&to="+max
+                            + "&granularity=auto&load=individually";
+            }else{
+                var url = serverUrl + "/get-data?column="+column+"&granularity=minute&load=individually";
+            }
 
-                //change columns here.....
+            loadChannel(url, function(json){
                 updateChannels(json.columns[0]);
-                layers.graph(channels);
-                layers.labels();
             })
-
         }
 
         chart.setRange = function (range){
-            var min = range[0];
-            var max = range[1];
+            min = parseInt(range[0]);
+            max = parseInt(range[1]);
             var url = serverUrl + "/get-data?"; //start building the URL
 
             //Channels/Columns
@@ -264,18 +321,13 @@ define(['d3'], function (d3) {
 
             url += "&granularity=auto&load=individually";
 
-            //load all stripe and draw the quality view
-            d3.json(url, function (error, json) {
-                if (error) return console.warn(error);
-
+            loadChannel(url, function(json){
                 json.columns.forEach(function(element,index,array){
                    updateChannels(element);
                 });
-
-                //update data
-                layers.graph();
             });
          }
+
 
         return chart;
     }

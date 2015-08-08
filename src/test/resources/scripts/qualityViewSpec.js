@@ -86,7 +86,7 @@ define(['d3','jquery','app/qualityView', 'app/qualityStripe', 'colorbrewer'], fu
                 expect(numberOfChildren).toBe(1);
 
                 var id =d3.select(allQualityStripe.node()).attr("id");
-                expect(id).toBe("qualityStripe.all");
+                expect(id).toBe("qualityStripe-all");
             });
 
             it("should have an individual quality stripe", function(){
@@ -103,7 +103,7 @@ define(['d3','jquery','app/qualityView', 'app/qualityStripe', 'colorbrewer'], fu
                 expect(numberOfChildren).toBe(1);
 
                 var id =d3.select(individualQualityStripe.node()).attr("id");
-                expect(id).toBe("qualityStripe.anything");
+                expect(id).toBe("qualityStripe-anything");
 
             });
 
@@ -119,15 +119,7 @@ define(['d3','jquery','app/qualityView', 'app/qualityStripe', 'colorbrewer'], fu
                 var qualityTick107 = d3.select(qualityTicks[0][107]);
                 var tickColor =  qualityTick107.attr("fill");
                 var quality = qualityTick107.data()[0].quality;
-
-                colorScale = d3.scale.ordinal()
-                    .domain([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-                    .range(colorbrewer.Reds[9]);
-
-                var color = d3.rgb(colorScale(1-quality));
-                var expectedColor = "rgb("+color.r+","+color.g+","+color.b+")";
-                colorbrewer.Reds[9]
-                expect(tickColor).toBe(expectedColor);
+                expect(tickColor).toBe("rgb(255,245,240)");
             });
 
             it("should have a time slider layer", function(){
@@ -160,6 +152,27 @@ define(['d3','jquery','app/qualityView', 'app/qualityStripe', 'colorbrewer'], fu
                 expect(rangeLength).toBe(1);
                 var handleLength = slider.selectAll("rect.d3-slider-handle")[0].length;
                 expect(handleLength).toBe(2);
+            })
+            it("should have a hover over ticks", function(){
+                var column = {
+                    name: "all",
+                    values: data
+                };
+                qualityView.addQualityStripe(column);
+
+                var slider = d3.select("#qualityTimeSlider")
+                var tick110 = d3.select("#qualityStripe-all").selectAll(".qualityTick")[0][110];
+                var tick110Select = d3.select(tick110);
+
+
+                tick110Select.on("mouseover").call(tick110Select.node(),tick110Select.datum());
+                setTimeout(function(){
+                   //so that the tooltip will be set
+                    var listElements = d3.select(".tooltip");
+                    expect(listElements[0].color).toBe("rgb(107, 174, 214)");
+                    expect(listElements[0].color).toBe("rgb(116, 196, 118)");
+
+                }, 500);
             })
 
         });

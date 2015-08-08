@@ -18,7 +18,8 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
             observer,
             colorScale = d3.scale.ordinal()
                 .domain([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-                .range(colorbrewer.Reds[9]);
+                .range(colorbrewer.Reds[9]),
+            dragStarted = false;
 
 
         // LAYERS
@@ -110,7 +111,9 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
                         .insert("g",":last-child");
                 }else{
                     qualityStripe = d3.select(this)
-                        .append("g");
+                        .append("g")
+                        .call(dragListener);
+
                 }
 
                 qualityStripe
@@ -120,6 +123,7 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
                     .attr("transform", "translate(0,"+existingChildren*30+")")
                     .attr("id", "qualityStripe-"+columnName)
                     .on("click", toggleRemoveButton);
+
 
                 //draw border
                 layers.border();
@@ -294,6 +298,24 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
             colorScale.range(_);
             return chart;
         }
+
+        var dragListener = d3.behavior.drag()
+            .on("dragstart", function(d){
+               dragStarted = true;
+                d3.event.sourceEvent.stopPropagation();
+                console.log("drag started");
+                d3.select(this).classed("dragging", true)
+            })
+            .on("dragend", function(d){
+                console.log("drag ended");
+                var selectedQualityStripe = d3.select(this).attr("id");
+                selectedQualityStripe = selectedQualityStripe.split("-")[1];
+                //console.log(selectedQualityStripe);
+                d3.select(this).classed("dragging", false)
+            })
+            .on("drag", function(d){
+                console.log("dragging!");
+            })
 
         return chart;
     };

@@ -37,9 +37,7 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlets</artifactId>
             <version>${jetty.version}</version>
-
         </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -50,10 +48,9 @@
             <!-- needs extra dependencies: objenesis & hamcrest -->
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>1.9.5</version>
+            <version>1.10.19</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>ieg</groupId>
             <artifactId>timebench</artifactId>
@@ -64,9 +61,7 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.0</version>
         </dependency>
-
     </dependencies>
-
 
     <build>
         <plugins>

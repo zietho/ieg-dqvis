@@ -167,15 +167,20 @@ public abstract class DataDAOTest {
 
         //read out results
         TemporalColumn temporalColumn = dataDAO.readAggregated("w", 3, indicators);
-        logger.info(""+temporalColumn.getValues().get(0).getQuality());
-        logger.info(""+temporalColumn.getValues().get(1).getQuality());
-        assertTrue(temporalColumn.getValues().get(0).getQuality()==0.5);
-        assertTrue(temporalColumn.getValues().get(1).getQuality()==0.3333333333333333);
-        assertTrue(temporalColumn.getValues().get(2).getQuality()==1);
+        logger.info("" + temporalColumn.getValues().get(0).getQuality());
+        logger.info("" + temporalColumn.getValues().get(1).getQuality());
+        assertTrue(temporalColumn.getValues().get(0).getQuality() == 0.5);
+        assertTrue(temporalColumn.getValues().get(1).getQuality() == 0.3333333333333333);
+        assertTrue(temporalColumn.getValues().get(2).getQuality() == 1);
         assertTrue(temporalColumn.getValues().get(3).getQuality()==1);
     }
 
-
-
+    @Test
+    public void testGetNumberOfDataPointsToGranularity() throws Exception{
+        assertTrue(dataDAO.getDataPointsToGranularity(0)==1);
+        assertTrue(dataDAO.getDataPointsToGranularity(1)==2);
+        assertTrue(dataDAO.getDataPointsToGranularity(2)==3);
+        assertTrue(dataDAO.getDataPointsToGranularity(3)==4);
+    }
 
 }

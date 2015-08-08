@@ -50,9 +50,13 @@ public interface DataDAO{
 
     public TemporalColumn readAggregated(String column, int granularity, List<String> indicators);
 
+    public TemporalColumn readAggregated(String column, int granularity, List<String> indicators, int[] range);
+
     public TemporalColumn readAggregated(int granularity);
 
     public TemporalColumn readAggregated(int granularity, List<String> indicators);
+
+    public TemporalColumn readAggregated(int granularity, List<String> indicators, int[] range);
 
     public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators, int[] range);
 
@@ -72,4 +76,6 @@ public interface DataDAO{
     public Object getAggregatedDataset();
 
     public void setAggregatedDataset(Object aggregatedDataset);
+
+    public int getDataPointsToGranularity(int granularity);
 }

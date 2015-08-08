@@ -35,7 +35,7 @@ import java.util.List;
 /**
  * Created by evolution on 07/07/2014.
  */
-public class CsvDAO implements DataDAO{
+public class CsvDAO implements DataDAO {
     private static CsvDAO instance = null;
     final Logger logger = LoggerFactory.getLogger(CsvDAO.class);
     private String dataPath = "";
@@ -53,20 +53,20 @@ public class CsvDAO implements DataDAO{
     }
 
 
-    private CsvDAO(String dataPath, String dataSpecPath){
+    private CsvDAO(String dataPath, String dataSpecPath) {
         this.dataPath = dataPath;
-        this.dataSpecPath= dataSpecPath;
+        this.dataSpecPath = dataSpecPath;
         this.dataset = this.readData(dataPath, dataSpecPath);
         this.datasetSchema = this.dataset.getDataColumnSchema();
         //TODO fix bug with current test data
         //this.aggregatedDataset = this.aggregate();
     }
 
-    public TemporalDataset readData(){
+    public TemporalDataset readData() {
         return readData(this.dataPath, this.dataSpecPath);
     }
 
-    public TemporalDataset readData(String dataPath, String dataSpecPath){
+    public TemporalDataset readData(String dataPath, String dataSpecPath) {
         TemporalDataColumnSpecification spec = (TemporalDataColumnSpecification) JaxbMarshaller
                 .load(dataSpecPath, TemporalDataColumnSpecification.class);
         TextTableTemporalDatasetReader reader = new TextTableTemporalDatasetReader(spec);
@@ -83,53 +83,53 @@ public class CsvDAO implements DataDAO{
         return tmpds;
     }
 
-    public TemporalData read(){
+    public TemporalData read() {
         TemporalData temporalData = new TemporalData();
         Schema schema = dataset.getDataColumnSchema();
 
-        for(int i=0; i<schema.getColumnCount(); i++){
+        for (int i = 0; i < schema.getColumnCount(); i++) {
             temporalData.add(this.read(this.datasetSchema.getColumnName(i)));
         }
 
         return temporalData;
     }
 
-    public TemporalColumn read(String column){
-        return this.readTimeSlice(0, dataset.getTemporalObjectTable().getRowCount()-1, column);
+    public TemporalColumn read(String column) {
+        return this.readTimeSlice(0, dataset.getTemporalObjectTable().getRowCount() - 1, column);
     }
 
-    public TemporalData readTimeSlice(int fromIndex, int toIndex){
+    public TemporalData readTimeSlice(int fromIndex, int toIndex) {
         TemporalData temporalData = new TemporalData();
-        for(int i=0; i<datasetSchema.getColumnCount(); i++){
+        for (int i = 0; i < datasetSchema.getColumnCount(); i++) {
             temporalData.add(readTimeSlice(fromIndex, toIndex, datasetSchema.getColumnName(i)));
         }
 
         return temporalData;
     }
 
-    public TemporalColumn readTimeSlice(int fromIndex, int toIndex, String column){
+    public TemporalColumn readTimeSlice(int fromIndex, int toIndex, String column) {
         TemporalColumn temporalColumn = new TemporalColumn(column);
         TemporalElementStore temporalElementStore = dataset.getTemporalElements();
 
-        if(column != null && !column.equals("")){
+        if (column != null && !column.equals("")) {
             Table table = dataset.getTemporalObjectTable();
 
             //first get the column and convert it to an array list
             Column dataColumn = table.getColumn(column);
-            Column missingDataColumn = table.getColumn(column+".MissingData");
-            Column invalidDataColumn = table.getColumn(column+".InvalidData");
+            Column missingDataColumn = table.getColumn(column + ".MissingData");
+            Column invalidDataColumn = table.getColumn(column + ".InvalidData");
 
-            for(int i=0; i<dataColumn.getRowCount(); i++){
+            for (int i = 0; i < dataColumn.getRowCount(); i++) {
                 double dataValue = dataColumn.getDouble(i);
-                double qualityValue =0;
-                if(missingDataColumn != null && invalidDataColumn != null){
-                    qualityValue = (missingDataColumn.get(i)==1 || invalidDataColumn.get(i)==1) ? 1 : 0;
+                double qualityValue = 0;
+                if (missingDataColumn != null && invalidDataColumn != null) {
+                    qualityValue = (missingDataColumn.get(i) == 1 || invalidDataColumn.get(i) == 1) ? 1 : 0;
                 }
                 long inf = temporalElementStore.getTemporalElementByRow(i).getInf();
                 long sup = temporalElementStore.getTemporalElementByRow(i).getSup();
                 long dateValue = (inf == sup) ? inf : 0;
 
-                if(inf != sup) {
+                if (inf != sup) {
                     logger.warn("inf: {} and sup: {} are not the same", inf, sup);
                 }
 
@@ -140,21 +140,21 @@ public class CsvDAO implements DataDAO{
         return temporalColumn;
     }
 
-    public GranularityAggregationTree aggregate(){
+    public GranularityAggregationTree aggregate() {
         Calendar calendar = JavaDateCalendarManager.getSingleton().getDefaultCalendar();
         GranularityAggregationAction timeAggregationAction = new GranularityAggregationAction(this.dataset,
-                new Granularity[] {
-                        CalendarFactory.getSingleton().getGranularity(calendar,"Top","Top"),
-                        CalendarFactory.getSingleton().getGranularity(calendar,"Day","Top"),
-                        CalendarFactory.getSingleton().getGranularity(calendar,"Hour","Day"),
-                        CalendarFactory.getSingleton().getGranularity(calendar,"Minute","Hour") },
+                new Granularity[]{
+                        CalendarFactory.getSingleton().getGranularity(calendar, "Top", "Top"),
+                        CalendarFactory.getSingleton().getGranularity(calendar, "Day", "Top"),
+                        CalendarFactory.getSingleton().getGranularity(calendar, "Hour", "Day"),
+                        CalendarFactory.getSingleton().getGranularity(calendar, "Minute", "Hour")},
                 -1.0);
         timeAggregationAction.run(0);
         return timeAggregationAction.getGranularityAggregationTree();
     }
 
-    public core.Schema getColumnNames(){
-        if(schema == null) {
+    public core.Schema getColumnNames() {
+        if (schema == null) {
             core.Schema schema = new core.Schema();
             int numberOfColumns = (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0);
             //cut off the first 3 columns as they are id... temp something..
@@ -168,40 +168,57 @@ public class CsvDAO implements DataDAO{
         return this.schema;
     }
 
-    public TemporalColumn readAggregated(String column, int granularity){
+    public TemporalColumn readAggregated(String column, int granularity) {
         List<String> columns = new ArrayList<String>();
         columns.add(column);
-        return  readAggregated(columns, granularity);
+        return readAggregated(columns, granularity);
     }
 
-    public TemporalColumn readAggregated(String column, int granularity, List<String> indicators){
+    public TemporalColumn readAggregated(String column, int granularity, List<String> indicators) {
         List<String> columns = new ArrayList<String>();
         columns.add(column);
-        return  readAggregated(columns, granularity, indicators);
+        return readAggregated(columns, granularity, indicators);
+    }
+
+    public TemporalColumn readAggregated(String column, int granularity, List<String> indicators, int[] range) {
+        List<String> columns = new ArrayList<String>();
+        columns.add(column);
+        return readAggregated(columns, granularity, indicators, range);
     }
 
 
-    public TemporalColumn readAggregated(int granularity){
+    public TemporalColumn readAggregated(int granularity) {
         List<String> columns = new ArrayList<String>();
         int numberOfColumns = (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0);
-        for(int i=0; i<numberOfColumns;i++) {
+        for (int i = 0; i < numberOfColumns; i++) {
             columns.add(this.datasetSchema.getColumnName(i));
         }
 
         return readAggregated(columns, granularity);
     }
 
-    public TemporalColumn readAggregated(int granularity, List<String> indicators){
+
+    public TemporalColumn readAggregated(int granularity, List<String> indicators, int range[]) {
         List<String> columns = new ArrayList<String>();
         int numberOfColumns = (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0);
-        for(int i=0; i<numberOfColumns;i++) {
+        for (int i = 0; i < numberOfColumns; i++) {
+            columns.add(this.datasetSchema.getColumnName(i));
+        }
+
+        return readAggregated(columns, granularity, indicators, range);
+    }
+
+    public TemporalColumn readAggregated(int granularity, List<String> indicators) {
+        List<String> columns = new ArrayList<String>();
+        int numberOfColumns = (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0);
+        for (int i = 0; i < numberOfColumns; i++) {
             columns.add(this.datasetSchema.getColumnName(i));
         }
 
         return readAggregated(columns, granularity, indicators);
     }
 
-    public TemporalColumn readAggregated(List<String> columns, int granularity){
+    public TemporalColumn readAggregated(List<String> columns, int granularity) {
         List<String> indicators = new ArrayList<String>();
         //add all
         indicators.add("$.MissingData");
@@ -210,21 +227,21 @@ public class CsvDAO implements DataDAO{
         return readAggregated(columns, granularity, indicators);
     }
 
-    public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators){
-        logger.info("chosen indicators: "+indicators.toString());
+    public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators) {
+        logger.info("chosen indicators: " + indicators.toString());
         Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
-                .rows(  new ComparisonPredicate(ComparisonPredicate.EQ,
+                .rows(new ComparisonPredicate(ComparisonPredicate.EQ,
                                 new ColumnExpression(ParentChildNode.DEPTH),
                                 new NumericLiteral(granularity))
                 );
 
         //name new temporal column
         TemporalColumn temporalColumn;
-        if(columns.size()==1) {
+        if (columns.size() == 1) {
             temporalColumn = new TemporalColumn(columns.get(0));
-        }else if(columns.size()< (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0)) {
+        } else if (columns.size() < (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0)) {
             temporalColumn = new TemporalColumn("selected");
-        }else{
+        } else {
             temporalColumn = new TemporalColumn("all");
         }
 
@@ -240,7 +257,7 @@ public class CsvDAO implements DataDAO{
         double qualityByIndicator;
 
         //TODO - unsorted!*/
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             id = iterator.next();
             TemporalObject temporalObject = aggregatedDataset.getTemporalObject(id);
             GenericTemporalElement temporalElement = aggregatedDataset.getTemporalElement(id);
@@ -251,32 +268,31 @@ public class CsvDAO implements DataDAO{
             mean = 0;
 
 
-
             mostImpactingColumn = "";
             mostImpactingColumnValue = 0;
             affectedChannels = new ArrayList<AffectedChannel>();
 
             //iterate over all the different columns
-            for(String column : columns) {
+            for (String column : columns) {
 
-                mostImpactingIndicator= "";
+                mostImpactingIndicator = "";
                 mostImpactingIndicatorValue = 0;
                 affectingIndicators = new ArrayList<String>();
 
-                for(String indicator:indicators){
+                for (String indicator : indicators) {
                     //check if its a pattern
                     String in = indicator;
                     indicator = indicator.replaceAll("\\$", column);
                     qualityByIndicator = temporalObject.getDouble(indicator);
 
-                    if(qualityByIndicator>mostImpactingIndicatorValue){
+                    if (qualityByIndicator > mostImpactingIndicatorValue) {
                         mostImpactingIndicator = in;
                         mostImpactingIndicatorValue = qualityByIndicator;
                     }
                     q += qualityByIndicator;
 
-                    if(qualityByIndicator>0){
-                        if(!affectingIndicators.contains(in)) {
+                    if (qualityByIndicator > 0) {
+                        if (!affectingIndicators.contains(in)) {
                             affectingIndicators.add(in);
                         }
                     }
@@ -284,18 +300,17 @@ public class CsvDAO implements DataDAO{
                 }
 
 
-
-                double columnQuality = q/indicators.size();
+                double columnQuality = q / indicators.size();
                 quality += columnQuality;
 
                 //retrieve most impacting channel
-                if(columnQuality>mostImpactingColumnValue){
+                if (columnQuality > mostImpactingColumnValue) {
                     mostImpactingColumn = column;
                     mostImpactingColumnValue = columnQuality;
                 }
 
                 //add channels with data deficiencies
-                if(columnQuality>0){
+                if (columnQuality > 0) {
                     affectedChannels.add(new AffectedChannel(column, mostImpactingIndicator));
                 }
 
@@ -306,33 +321,34 @@ public class CsvDAO implements DataDAO{
             }
 
             AffectedChannel affectedChannel = new AffectedChannel(mostImpactingColumn, mostImpactingIndicator);
-            quality = (quality/columns.size());
-            mean = mean/columns.size();
+            quality = (quality / columns.size());
+            mean = mean / columns.size();
             TemporalValue temporalValue = new TemporalValue(date, mean, quality, affectedChannels, affectingIndicators);
             temporalColumn.add(temporalValue);
         }
 
 
-
-        return  temporalColumn;
+        return temporalColumn;
     }
 
-    public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators, int[] range){
+    public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators, int[] range) {
         //first, get all available values
         TemporalColumn temporalColumn = readAggregated(columns, granularity, indicators);
-        //retrieve size of all values and the lower and upper bound of this number
 
+        //retrieve size of all values and the lower and upper bound of this number
         int numberOfElements = temporalColumn.getValues().size();
-        logger.info("before"+numberOfElements);
-        if(range != null) {
+        logger.info("before" + numberOfElements);
+        if (range != null) {
             int lowerBound = (int) Math.round(numberOfElements * ((double) range[0] / 100));
             int upperBound = (int) Math.round(numberOfElements * ((double) range[1] / 100));
 
             //slice the data and only return the requested data slice instead of the full range of the data - +1 cauz toIndex is excluded by default
-            temporalColumn.setValues(temporalColumn.getValues().subList(lowerBound, upperBound+1));
+            logger.info("lower bound:"+lowerBound);
+            logger.info("before bound:"+upperBound);
+            temporalColumn.setValues(temporalColumn.getValues().subList(lowerBound, upperBound-1));
         }
 
-        logger.info("after"+temporalColumn.getValues().size());
+        logger.info("after" + temporalColumn.getValues().size());
 
         return temporalColumn;
     }
@@ -345,9 +361,13 @@ public class CsvDAO implements DataDAO{
         return dataSpecPath;
     }
 
-    public void setDataPath(String dataPath){this.dataPath = dataPath;}
+    public void setDataPath(String dataPath) {
+        this.dataPath = dataPath;
+    }
 
-    public void setDataSpecPath(String dataSpecPath){ this.dataSpecPath = dataSpecPath;}
+    public void setDataSpecPath(String dataSpecPath) {
+        this.dataSpecPath = dataSpecPath;
+    }
 
     public TemporalDataset getDataset() {
         return dataset;
@@ -363,5 +383,21 @@ public class CsvDAO implements DataDAO{
 
     public void setAggregatedDataset(Object aggregatedDataset) {
         this.aggregatedDataset = (GranularityAggregationTree) aggregatedDataset;
+    }
+
+    public int getDataPointsToGranularity(int granularity) {
+        Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
+                .rows(new ComparisonPredicate(ComparisonPredicate.EQ,
+                                new ColumnExpression(ParentChildNode.DEPTH),
+                                new NumericLiteral(granularity))
+                );
+
+        int numberOfDataPoints = 0;
+        while(iterator.hasNext()){
+            numberOfDataPoints++;
+            iterator.next();
+        }
+        return numberOfDataPoints;
+
     }
 }
