@@ -31,9 +31,9 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
 
     //create quality view
     var qualityView = qv()
-        .margin({top: 0, right: 80, bottom: 0, left: 50})
+        .margin({top: 25, right: 80, bottom: 0, left: 50})
         .width(880)
-        .height(50)
+        .height(75)
         .serverUrl(serverUrl)
         .qualityIndicator("$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp")
         .indicators(indicators)
@@ -50,6 +50,7 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
         d3.select('#visualization')
             .call(qualityView);
         qualityView.addQualityStripe(json.columns[0]);
+
     });
 
     //lazy load the individual stripes

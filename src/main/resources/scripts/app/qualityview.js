@@ -4,7 +4,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
     //create closure
     function qualityView(selection) {
         //init + set defaults
-        var margin = {top: 20, right: 80, bottom: 30, left: 50},
+        var margin = {top: 30, right: 80, bottom: 30, left: 50},
             width = 960 - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom,
             svg,
@@ -28,16 +28,15 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             indicators = [],
             sliderCallBack,
             xScale = d3.time.scale(), //set x-scale and range
-            xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+            xAxis = d3.svg.axis().scale(xScale).orient("top");
 
         // LAYERS
         layers.qualityStripes = function(){
             var qualityStripes = svg.append("g")
                 .classed("qualityStripes", true)
                 .attr("id", "qualityStripes")
-                .attr("transform", "translate("+margin.left+",0)");
+                .attr("transform", "translate("+margin.left+","+margin.top+")");
 
-            console.log("margin left is: "+margin.left);
             qualityStripes
                 .append("g")
                 .attr("id", "allQualityStripe")
@@ -53,9 +52,9 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
 
         layers.axes = function() {
             //x-axis
-            d3.select("#qualityView").append("g")
-                .attr("class", "timeAxes");
-                //.attr("transform", "translate(0,");
+            svg.append("g")
+                .attr("class", "time axis")
+                .attr("transform", "translate("+margin.left+","+(margin.top-1)+")");
         }
 
         layers.individualQualityStripes = function(){
@@ -87,6 +86,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                     .attr("fill", "grey")
                     .attr("stroke", "grey")
                     .attr("points", "00,00 10,20 20,00")
+                    .attr("transform", "translate(0,"+margin.top+")")
                     .on("click", toggleIndividualQualityStripes)
                     .on("mouseover", showToggleTooltip)
                     .on("mouseout", hideToggleTooltip);
@@ -148,6 +148,8 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                     console.log(value);
                 });
 
+            console.log("slider width: "+width);
+
             d3.select("#allQualityStripe").call(timeSlider);
         }
 
@@ -159,14 +161,16 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .attr("id", "qualityView");
 
             //add layers
+            layers.axes();
             layers.toggle();
             layers.addSign();
             layers.addQualityStripesPanel();
             layers.qualityStripes();
             layers.qualityIndicator();
             layers.timeSlider();
-            layers.axes();
 
+
+            console.log("margin top: "+margin.top);
             console.log("width of quality Stripe: "+width);
             console.log(d3.selectAll("#allQualityStripe"));
             // update x and y scales (i.e, domain + range)
@@ -333,6 +337,18 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             .observer(this)
             .columnName(column.name);
 
+            if(column.name==="all"){
+                // update x and y scales (i.e, domain + range)
+                xScale
+                    .domain(d3.extent(column.values, xValue))
+                    .range([0,width-margin.right]);
+
+                console.log(column);
+                //update axes
+                d3.select(".time.axis").call(xAxis);
+            }
+
+
             d3.select((column.name == "all") ?
                     "#allQualityStripe" :
                     "#individualQualityStripes"
@@ -340,6 +356,8 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             .datum(column.values)
             .call(newQualityStripe);
             qualityStripes[column.name] = newQualityStripe;
+
+
         }
         chart.removeQualityStripe = function(selection){
             //first handle hidding
@@ -402,6 +420,19 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             if(!arguments.length) return sliderCallBack;
             sliderCallBack = _;
             return chart;
+        }
+
+        //added from detail
+        chart.xScale = function () {
+            return xScale;
+        }
+
+        chart.xAxis = function () {
+            return xAxis;
+        }
+
+        function X(d) {
+            return xScale(d.date);
         }
 
         return chart;

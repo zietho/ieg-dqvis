@@ -96,6 +96,9 @@ define(['d3','jquery'], function (d3, jQuery) {
                     }else{
                         var rangeWidth = parseInt(d3.select(this).attr("width"));
                         ///@TODO improve border values
+                        console.log("xdiff:"+xDiff);
+                        console.log("pos:"+pos);
+                        console.log(sliderLength);
                         if(pos-handleWidth>=0 && (pos+rangeWidth)<= sliderLength) {
                             moveRange(pos);
                         }
@@ -118,8 +121,6 @@ define(['d3','jquery'], function (d3, jQuery) {
 
         // Move slider handle on click/drag
         function moveHandle(newValue) {
-
-            console.log("INNNN");
             newValue = stepValue(scale.invert(newValue));
 
             var oldPos = scale(value[active - 1]),
@@ -130,28 +131,26 @@ define(['d3','jquery'], function (d3, jQuery) {
                 var newRange = scale(value[1])-scale(value[0]);
                 if (value[0] >= value[1]) return;
 
-                console.log(active);
-
                 if (active === 1) {
                     handle1.attr("x", newPos);
                     range.attr("x", parseInt(newPos)+parseInt(handleWidth));
                     rangeValue = newValue+scale.invert(handleWidth);
-                    console.log("hey: "+rangeValue);
                     range.attr("width",newRange-handleWidth);
                     //}
                 } else {
-                    console.log("hey: "+rangeValue);
                     handle2.attr("x", newPos);
                     range.attr("width", newRange-handleWidth);
                 }
+
+
             }
         }
 
         function moveRange(newValue){
             newValue = stepValue(scale.invert(newValue));
 
-            var oldPos = parseInt(scale(rangeValue)),
-                newPos = parseInt(scale(newValue));
+            var oldPos = scale(rangeValue),
+                newPos = scale(newValue);
 
             if (oldPos !== newPos){
                 rangeValue=newValue;
@@ -162,9 +161,9 @@ define(['d3','jquery'], function (d3, jQuery) {
                 currentXH2 += movedBy;
                 value[0] = scale.invert(currentXH1);
                 value[1] = scale.invert(currentXH2);
-                handle1.attr("x", scale(value[0]));
-                handle2.attr("x", scale(value[1]));
-                range.attr("x", newPos);
+                handle1.attr("x", parseInt(scale(value[0])));
+                handle2.attr("x", parseInt(scale(value[1])));
+                range.attr("x", parseInt(newPos));
             }
         }
 
