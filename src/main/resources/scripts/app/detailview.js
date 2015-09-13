@@ -107,6 +107,9 @@ define(['d3'], function (d3) {
 
             paths.exit().remove();
 
+            console.log("width of path is: "+width);
+            console.log(margin);
+
         }
 
         function removeChannel(selectedPath){
@@ -220,9 +223,10 @@ define(['d3'], function (d3) {
                     .attr("id","detailViewCanvas")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                layers.axes();
 
+                layers.axes();
                 updateChannels(data);
+
                 layers.graph();
                 layers.labels();
 

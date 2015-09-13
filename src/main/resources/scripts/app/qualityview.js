@@ -35,7 +35,9 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             var qualityStripes = svg.append("g")
                 .classed("qualityStripes", true)
                 .attr("id", "qualityStripes")
-                .attr("transform", "translate(35,0)");
+                .attr("transform", "translate("+margin.left+",0)");
+
+            console.log("margin left is: "+margin.left);
             qualityStripes
                 .append("g")
                 .attr("id", "allQualityStripe")
@@ -52,8 +54,8 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
         layers.axes = function() {
             //x-axis
             d3.select("#qualityView").append("g")
-                .attr("class", "x axis")
-                .attr("transform", "translate(0," + height + ")");
+                .attr("class", "timeAxes");
+                //.attr("transform", "translate(0,");
         }
 
         layers.individualQualityStripes = function(){
@@ -140,9 +142,10 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             var timeSlider = qualitySlider()
                 .value([33,66])
                 .baseHeight(25)
-                .scale(d3.scale.linear().domain([0, 100]).rangeRound([0, 730]))
+                .scale(d3.scale.linear().domain([0, 100]).rangeRound([0, width-margin.right]))
                 .on("slide", function(evt, value) {
                     sliderCallBack(evt, value);
+                    console.log(value);
                 });
 
             d3.select("#allQualityStripe").call(timeSlider);
@@ -164,7 +167,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             layers.timeSlider();
             layers.axes();
 
-
+            console.log("width of quality Stripe: "+width);
             console.log(d3.selectAll("#allQualityStripe"));
             // update x and y scales (i.e, domain + range)
             //xScale
@@ -190,6 +193,10 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 if(invisibleQualityStripes){
                     hideAddSign();
                 }
+
+                //TODO   implement calculation for dynamic calculation of height.
+                svg.transition().attr("height", 50);
+
             }else{
                 iqs
                     .classed("visible", true)
@@ -200,6 +207,9 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 addQualityStripePanel
                     .classed("visible", true)
                     .classed("invisible", false);
+
+                svg.transition().attr("height", 300);
+
                 if(invisibleQualityStripes){
                     showAddSign();
                 }
@@ -318,8 +328,8 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
         chart.addQualityStripe = function(column){
             var newQualityStripe = qualityStripe()
             .height(25)
-            .margin({top: 0, right: 0, bottom: 0, left: 0})
-            .width(750)
+            //.margin({top: 0, right: 0, bottom: 0, left: 0})
+            .width(width-margin.right)
             .observer(this)
             .columnName(column.name);
 

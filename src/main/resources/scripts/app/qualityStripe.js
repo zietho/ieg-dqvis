@@ -118,7 +118,7 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
 
                 qualityStripe
                     .classed("qualityStripe", true)
-                    .attr("width", width+50)
+                    .attr("width", width)
                     .attr("height", height)
                     .attr("transform", "translate(0,"+existingChildren*30+")")
                     .attr("id", "qualityStripe-"+columnName)

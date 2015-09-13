@@ -10,7 +10,6 @@ define(['d3','jquery'], function (d3, jQuery) {
         var min = 0,
             max = 100,
             step = 1,
-            margin = 50,
             value,
             active = 1,
             scale,
@@ -119,6 +118,8 @@ define(['d3','jquery'], function (d3, jQuery) {
 
         // Move slider handle on click/drag
         function moveHandle(newValue) {
+
+            console.log("INNNN");
             newValue = stepValue(scale.invert(newValue));
 
             var oldPos = scale(value[active - 1]),
@@ -129,13 +130,17 @@ define(['d3','jquery'], function (d3, jQuery) {
                 var newRange = scale(value[1])-scale(value[0]);
                 if (value[0] >= value[1]) return;
 
+                console.log(active);
+
                 if (active === 1) {
                     handle1.attr("x", newPos);
                     range.attr("x", parseInt(newPos)+parseInt(handleWidth));
                     rangeValue = newValue+scale.invert(handleWidth);
+                    console.log("hey: "+rangeValue);
                     range.attr("width",newRange-handleWidth);
                     //}
                 } else {
+                    console.log("hey: "+rangeValue);
                     handle2.attr("x", newPos);
                     range.attr("width", newRange-handleWidth);
                 }
