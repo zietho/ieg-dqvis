@@ -229,8 +229,8 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
             var indicators = observer.indicators();
 
             var shortText = "";
-            indicators.forEach(function(element, index, array){
-                if (element.value === indicator) {
+            indicators.forEach(function(column, index, array){
+                if (column.value === indicator) {
                     shortText= element.shortText;
                 }
             });

@@ -26,7 +26,9 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .domain([0,1,2,3])
                 .range([colorbrewer.Reds[9], colorbrewer.Blues[9], colorbrewer.Greens[9], colorbrewer.Purples[9]]),
             indicators = [],
-            sliderCallBack;
+            sliderCallBack,
+            xScale = d3.time.scale(), //set x-scale and range
+            xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
         // LAYERS
         layers.qualityStripes = function(){
@@ -45,6 +47,13 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .classed("invisible", true);
 
             return qualityStripes;
+        }
+
+        layers.axes = function() {
+            //x-axis
+            d3.select("#qualityView").append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")");
         }
 
         layers.individualQualityStripes = function(){
@@ -153,6 +162,14 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             layers.qualityStripes();
             layers.qualityIndicator();
             layers.timeSlider();
+            layers.axes();
+
+
+            console.log(d3.selectAll("#allQualityStripe"));
+            // update x and y scales (i.e, domain + range)
+            //xScale
+            //    .domain(d3.extent(data.values, xValue))
+            //    .range([0,width]);
         }
 
         // INTERACTION

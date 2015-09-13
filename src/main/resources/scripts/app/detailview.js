@@ -22,11 +22,28 @@ define(['d3'], function (d3) {
             active = false,
             draggedChannel,
             min,
-            max;
+            max,
+            definedLine;
 
         /*  LAYERS  */
 
         layers.graph = function(){
+
+
+            line.defined(function(d){
+                var missing = true;
+                d.affectingIndicators.forEach(function (element, index, array) {
+                    if (element == "$.MissingData") {
+                        missing = false;
+                    }
+
+                    //box einfuegen!
+                })
+                return missing;
+            })
+
+
+
             // update x and y scales (i.e, domain + range)
             xScale
                 .domain(d3.extent(channels[0].values, xValue))
@@ -67,8 +84,20 @@ define(['d3'], function (d3) {
                 .style("stroke", function (d) {
                     return color(d.name);
                 })
+                .style("stroke-width", 2)
                 .on("click", function(d){
-                    d3.select(this).attr("stroke","blue");
+                    var selectedPath = d3.select(this);
+
+                    //remove all old remove buttons and
+                    d3.select("#detailViewCanvas").selectAll(".removeButton").remove();
+                    d3.selectAll(".line").transition().style("stroke-width", 2)
+
+                    if(selectedPath.style("stroke-width")==="2px") {
+                        selectedPath.transition().style("stroke-width", 4);
+                        addRemoveButton(selectedPath);
+                    }else{
+                        selectedPath.transition().style("stroke-width", 2);
+                    }
                 })
 
             d3.transition().selectAll("path.line")
@@ -79,6 +108,56 @@ define(['d3'], function (d3) {
             paths.exit().remove();
 
         }
+
+        function removeChannel(selectedPath){
+            var id = selectedPath.attr("id");
+            channels.forEach(function(column,index,array){
+                if(column.name==id) {
+                    console.log(index);
+                    channels.splice(index,1);
+                    console.log(channels);
+                    selectedPath.remove();
+                }
+            });
+
+            d3.selectAll(".label").each(function(d,i){
+                if(d.name==id){
+                    this.remove();
+                }
+            })
+        }
+
+        function addRemoveButton(selectedPath){
+            var data = selectedPath.data()[0];
+            var y = Y(data.values[data.values.length-1]);
+
+            var removeButton =  d3.select("#detailViewCanvas")
+                .append("g")
+                .classed("removeButton", true)
+                .attr("transform", "translate(" + (width+3) + "," + y + ")")
+                .attr("dy", ".35em")
+                .on("click", function(){
+                    removeButton.remove();
+                    removeChannel(selectedPath);
+                });
+
+            /*Create the circle for each block */
+            var circle = removeButton.append("circle")
+                .attr("r", 10 )
+                .attr("cy",2)
+                .attr("fill", selectedPath.style("stroke"))
+                .classed("removeCircle", true);
+
+            console.log(selectedPath.attr("fill"));
+
+            /* Create the text for each block */
+            var text = removeButton.append("text")
+                .attr("dx", -5)
+                .attr("dy", 8)
+                .text("X")
+                .classed("removeText", true);
+        }
+
 
         layers.labels = function(){
             var labels = g.selectAll("text.label")
@@ -113,6 +192,7 @@ define(['d3'], function (d3) {
             g.append("g")
                 .attr("class", "x axis")
                 .attr("transform", "translate(0," + height + ")");
+
 
             //y-axis
             g.append("g")
@@ -181,7 +261,6 @@ define(['d3'], function (d3) {
 
 
         function updateChannels(data){
-
             var contained = false;
             channels.forEach(function(element,index,array){
                   if(element.name==data.name) {
@@ -327,6 +406,12 @@ define(['d3'], function (d3) {
                 });
             });
          }
+
+        chart.definedLine = function(_){
+            if (!arguments.length) return indicators;
+            indicators = _;
+            return chart;
+        }
 
 
         return chart;
