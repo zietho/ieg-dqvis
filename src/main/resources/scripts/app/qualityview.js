@@ -28,7 +28,9 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             indicators = [],
             sliderCallBack,
             xScale = d3.time.scale(), //set x-scale and range
-            xAxis = d3.svg.axis().scale(xScale).orient("top");
+            xAxis = d3.svg.axis().scale(xScale).orient("top"),
+            qualityStripeHeight = 25,
+            qualityStripeMarginTop = 5;
 
         // LAYERS
         layers.qualityStripes = function(){
@@ -199,7 +201,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 }
 
                 //TODO   implement calculation for dynamic calculation of height.
-                svg.transition().attr("height", 50);
+                svg.transition().attr("height", height);
 
             }else{
                 iqs
@@ -211,8 +213,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 addQualityStripePanel
                     .classed("visible", true)
                     .classed("invisible", false);
-
-                svg.transition().attr("height", 300);
+                svg.transition().attr("height", (height+columns.length*(qualityStripeHeight+qualityStripeMarginTop)));
 
                 if(invisibleQualityStripes){
                     showAddSign();
@@ -331,7 +332,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
         }
         chart.addQualityStripe = function(column){
             var newQualityStripe = qualityStripe()
-            .height(25)
+            .height(qualityStripeHeight)
             //.margin({top: 0, right: 0, bottom: 0, left: 0})
             .width(width-margin.right)
             .observer(this)
@@ -375,7 +376,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                     if(current == this)
                         translate = true;
                 if (current != this && translate) {
-                    var x = (30*(i-1))-30;
+                    var x = (qualityStripeHeight+qualityStripeMarginTop*(i-1))-(qualityStripeHeight+qualityStripeMarginTop)
                     d3.select(this)
                         .transition()
                         .attr("transform", "translate(0,"+x+")");

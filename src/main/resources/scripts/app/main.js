@@ -33,7 +33,7 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
     var qualityView = qv()
         .margin({top: 25, right: 80, bottom: 0, left: 50})
         .width(880)
-        .height(75)
+        .height(55)
         .serverUrl(serverUrl)
         .qualityIndicator("$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp")
         .indicators(indicators)

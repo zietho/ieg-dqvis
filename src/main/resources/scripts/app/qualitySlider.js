@@ -14,8 +14,10 @@ define(['d3','jquery'], function (d3, jQuery) {
             active = 1,
             scale,
             baseHeight,
-            handleWidth = 20,
-            rangeValue;
+            handleWidth = 5,
+            rangeValue,
+            p1,
+            p2;
 
         // Private variables
         var axisScale,
@@ -57,6 +59,9 @@ define(['d3','jquery'], function (d3, jQuery) {
                     .attr("id", "range")
                     .call(drag);
 
+
+
+
                 handle1 = sliderGroup
                     .append("rect")
                     .classed("d3-slider-handle", true)
@@ -65,6 +70,7 @@ define(['d3','jquery'], function (d3, jQuery) {
                     .attr("width",handleWidth)
                     .attr("height", baseHeight)
                     .call(drag);
+
 
                 handle2 = sliderGroup
                     .append("rect")
@@ -76,6 +82,28 @@ define(['d3','jquery'], function (d3, jQuery) {
                     .call(drag);
 
                 rangeValue = scale.invert(range.attr("x"));
+
+
+
+                var xP1 = scale(value[0]);
+                p1 = sliderGroup
+                    .append("polygon")
+                    .classed("handle1Triangle", true)
+                    .attr("fill", "black")
+                    .attr("stroke", "black")
+                    .attr("points", "00,00 10,20 20,00")
+                    .attr("transform", "translate("+xP1+",-20)");
+
+                var xP2 = scale(value[1]);
+                p2 = sliderGroup
+                    .append("polygon")
+                    .classed("handle2Triangle", true)
+                    .attr("fill", "black")
+                    .attr("stroke", "black")
+                    .attr("points", "00,00 10,20 20,00")
+                    .attr("transform", "translate("+xP2+",-20)");
+
+
 
                 function onDragHorizontal() {
                     if(xDiff==0) {
@@ -96,9 +124,9 @@ define(['d3','jquery'], function (d3, jQuery) {
                     }else{
                         var rangeWidth = parseInt(d3.select(this).attr("width"));
                         ///@TODO improve border values
-                        console.log("xdiff:"+xDiff);
-                        console.log("pos:"+pos);
-                        console.log(sliderLength);
+                        //console.log("xdiff:"+xDiff);
+                        //console.log("pos:"+pos);
+                        //console.log(sliderLength);
                         if(pos-handleWidth>=0 && (pos+rangeWidth)<= sliderLength) {
                             moveRange(pos);
                         }
@@ -136,10 +164,12 @@ define(['d3','jquery'], function (d3, jQuery) {
                     range.attr("x", parseInt(newPos)+parseInt(handleWidth));
                     rangeValue = newValue+scale.invert(handleWidth);
                     range.attr("width",newRange-handleWidth);
+                    p1.attr("transform", "translate("+newPos+",-20)")
                     //}
                 } else {
                     handle2.attr("x", newPos);
                     range.attr("width", newRange-handleWidth);
+                    p2.attr("transform", "translate("+newPos+",-20)")
                 }
 
 
@@ -161,9 +191,14 @@ define(['d3','jquery'], function (d3, jQuery) {
                 currentXH2 += movedBy;
                 value[0] = scale.invert(currentXH1);
                 value[1] = scale.invert(currentXH2);
+
+
                 handle1.attr("x", parseInt(scale(value[0])));
                 handle2.attr("x", parseInt(scale(value[1])));
                 range.attr("x", parseInt(newPos));
+
+                //TODO - move whole slider instead of parts?
+                //sliderGroup.attr("x", parseInt(sliderGroup.attr("x")+=movedBy));
             }
         }
 
