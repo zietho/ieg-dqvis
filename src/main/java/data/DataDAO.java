@@ -3,6 +3,8 @@ package data;
 import core.Schema;
 import core.TemporalColumn;
 import core.TemporalData;
+import prefuse.data.io.DataIOException;
+import timeBench.data.TemporalDataException;
 
 import java.util.List;
 
@@ -12,7 +14,7 @@ public interface DataDAO{
      * Method to read the data source without params
      * @return
      */
-    public Object readData();
+    public Object readData() throws DataIOException, TemporalDataException;
 
     public TemporalData read();
 

@@ -59,9 +59,6 @@ define(['d3','jquery'], function (d3, jQuery) {
                     .attr("id", "range")
                     .call(drag);
 
-
-
-
                 handle1 = sliderGroup
                     .append("rect")
                     .classed("d3-slider-handle", true)
@@ -70,7 +67,6 @@ define(['d3','jquery'], function (d3, jQuery) {
                     .attr("width",handleWidth)
                     .attr("height", baseHeight)
                     .call(drag);
-
 
                 handle2 = sliderGroup
                     .append("rect")
@@ -84,7 +80,6 @@ define(['d3','jquery'], function (d3, jQuery) {
                 rangeValue = scale.invert(range.attr("x"));
 
 
-
                 var xP1 = scale(value[0]);
                 p1 = sliderGroup
                     .append("polygon")
@@ -92,7 +87,8 @@ define(['d3','jquery'], function (d3, jQuery) {
                     .attr("fill", "black")
                     .attr("stroke", "black")
                     .attr("points", "00,00 10,20 20,00")
-                    .attr("transform", "translate("+xP1+",-20)");
+                    .attr("transform", "translate("+(xP1-7)+",-20)")
+                    //.call(drag);
 
                 var xP2 = scale(value[1]);
                 p2 = sliderGroup
@@ -101,7 +97,8 @@ define(['d3','jquery'], function (d3, jQuery) {
                     .attr("fill", "black")
                     .attr("stroke", "black")
                     .attr("points", "00,00 10,20 20,00")
-                    .attr("transform", "translate("+xP2+",-20)");
+                    .attr("transform", "translate("+(xP2-7)+",-20)")
+                    //.call(drag);
 
 
 
@@ -164,12 +161,12 @@ define(['d3','jquery'], function (d3, jQuery) {
                     range.attr("x", parseInt(newPos)+parseInt(handleWidth));
                     rangeValue = newValue+scale.invert(handleWidth);
                     range.attr("width",newRange-handleWidth);
-                    p1.attr("transform", "translate("+newPos+",-20)")
+                    p1.attr("transform", "translate("+(newPos-7)+",-20)")
                     //}
                 } else {
                     handle2.attr("x", newPos);
                     range.attr("width", newRange-handleWidth);
-                    p2.attr("transform", "translate("+newPos+",-20)")
+                    p2.attr("transform", "translate("+(newPos-7)+",-20)")
                 }
 
 
@@ -195,6 +192,8 @@ define(['d3','jquery'], function (d3, jQuery) {
 
                 handle1.attr("x", parseInt(scale(value[0])));
                 handle2.attr("x", parseInt(scale(value[1])));
+                p1.attr("transform", "translate("+(parseInt(scale(value[0]))-7)+",-20)")
+                p2.attr("transform", "translate("+(parseInt(scale(value[1]))-7)+",-20)")
                 range.attr("x", parseInt(newPos));
 
                 //TODO - move whole slider instead of parts?

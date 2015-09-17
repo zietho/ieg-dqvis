@@ -31,6 +31,7 @@ public class Application extends io.dropwizard.Application<ApplicationConfigurat
         final String data = "src/main/resources/data/01_raw_data_set1_preprocessed_markus.csv";
         final String spec = "src/main/resources/data/spec2.xml";
         this.dataDAO = CsvDAO.getInstance(data,spec); //init implementation of dataDAO
+
     }
 
     @Override

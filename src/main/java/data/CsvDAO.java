@@ -48,12 +48,18 @@ public class CsvDAO implements DataDAO {
 
     public static CsvDAO getInstance(String dataPath, String dataSpecPath) {
         if (instance == null)
-            instance = new CsvDAO(dataPath, dataSpecPath);
+            try {
+                instance = new CsvDAO(dataPath, dataSpecPath);
+            } catch (DataIOException e) {
+                e.printStackTrace();
+            } catch (TemporalDataException e) {
+                e.printStackTrace();
+            }
         return instance;
     }
 
 
-    private CsvDAO(String dataPath, String dataSpecPath) {
+    private CsvDAO(String dataPath, String dataSpecPath) throws DataIOException, TemporalDataException {
         this.dataPath = dataPath;
         this.dataSpecPath = dataSpecPath;
         this.dataset = this.readData(dataPath, dataSpecPath);
@@ -62,11 +68,11 @@ public class CsvDAO implements DataDAO {
         //this.aggregatedDataset = this.aggregate();
     }
 
-    public TemporalDataset readData() {
+    public TemporalDataset readData() throws DataIOException, TemporalDataException {
         return readData(this.dataPath, this.dataSpecPath);
     }
 
-    public TemporalDataset readData(String dataPath, String dataSpecPath) {
+    public TemporalDataset readData(String dataPath, String dataSpecPath) throws DataIOException, TemporalDataException {
         TemporalDataColumnSpecification spec = (TemporalDataColumnSpecification) JaxbMarshaller
                 .load(dataSpecPath, TemporalDataColumnSpecification.class);
         TextTableTemporalDatasetReader reader = new TextTableTemporalDatasetReader(spec);
