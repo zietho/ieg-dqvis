@@ -80,37 +80,48 @@ define(['d3','jquery'], function (d3, jQuery) {
                 rangeValue = scale.invert(range.attr("x"));
 
 
-                var xP1 = scale(value[0]);
+                var xP1 = scale(value[0])-5;
                 p1 = sliderGroup
                     .append("polygon")
                     .classed("handle1Triangle", true)
+                    .attr("id", "handle-triangle-one")
                     .attr("fill", "black")
                     .attr("stroke", "black")
-                    .attr("points", "00,00 10,20 20,00")
-                    .attr("transform", "translate("+(xP1-7)+",-20)")
-                    //.call(drag);
+                    .attr("points", "00,00 7.5,15 15,00")
+                    .attr("transform", "translate("+(xP1)+",-15)")
+                    .call(drag);
 
-                var xP2 = scale(value[1]);
+                var xP2 = scale(value[1])-5;
                 p2 = sliderGroup
                     .append("polygon")
                     .classed("handle2Triangle", true)
+                    .attr("id", "handle-triangle-two")
                     .attr("fill", "black")
                     .attr("stroke", "black")
-                    .attr("points", "00,00 10,20 20,00")
-                    .attr("transform", "translate("+(xP2-7)+",-20)")
-                    //.call(drag);
+                    .attr("points", "00,00 7.5,15 15,00")
+                    .attr("transform", "translate("+(xP2)+",-15)")
+                    .call(drag);
 
 
 
                 function onDragHorizontal() {
                     if(xDiff==0) {
-                        xDiff = d3.event.x - parseInt(d3.select(this).attr("x"));
+                        var x = parseInt(d3.select(this).attr("x"));
+                        if(isNaN(x)){
+                            var t = d3.transform(d3.select(this).attr("transform"));
+                            x = parseInt(t.translate[0]);
+                        }
+
+                        console.log("x is "+x);
+                        xDiff = d3.event.x - x;
                     }
 
+
+
                     var id = d3.select(this).attr("id");
-                    if (id === "handle-one") {
+                    if (id === "handle-one" || id==="handle-triangle-one") {
                         active = 1;
-                    } else if (id == "handle-two") {
+                    } else if (id === "handle-two" || id==="handle-triangle-two") {
                         active = 2;
                     }
 
@@ -161,12 +172,12 @@ define(['d3','jquery'], function (d3, jQuery) {
                     range.attr("x", parseInt(newPos)+parseInt(handleWidth));
                     rangeValue = newValue+scale.invert(handleWidth);
                     range.attr("width",newRange-handleWidth);
-                    p1.attr("transform", "translate("+(newPos-7)+",-20)")
+                    p1.attr("transform", "translate("+(newPos-5)+",-15)")
                     //}
                 } else {
                     handle2.attr("x", newPos);
                     range.attr("width", newRange-handleWidth);
-                    p2.attr("transform", "translate("+(newPos-7)+",-20)")
+                    p2.attr("transform", "translate("+(newPos-5)+",-15)")
                 }
 
 
@@ -192,8 +203,8 @@ define(['d3','jquery'], function (d3, jQuery) {
 
                 handle1.attr("x", parseInt(scale(value[0])));
                 handle2.attr("x", parseInt(scale(value[1])));
-                p1.attr("transform", "translate("+(parseInt(scale(value[0]))-7)+",-20)")
-                p2.attr("transform", "translate("+(parseInt(scale(value[1]))-7)+",-20)")
+                p1.attr("transform", "translate("+(parseInt(scale(value[0]))-5)+",-15)")
+                p2.attr("transform", "translate("+(parseInt(scale(value[1]))-5)+",-15)")
                 range.attr("x", parseInt(newPos));
 
                 //TODO - move whole slider instead of parts?
