@@ -93,7 +93,6 @@ public class TemporalDataResource {
                 }else {
                     temporalData.add(dataDAO.readAggregated(columns, this.getLevel(granularity.get()), indicators));
                 }
-
             }
         }
         //default
@@ -117,7 +116,7 @@ public class TemporalDataResource {
     public int getSuitableGranularity(int[] range){
         double percentOfData = (double) (range[1]-range[0])/100;
         int expectedDataPoints = 0;
-        int desiredGranularity = -1;
+        int desiredGranularity = -2;
 
         do{
             desiredGranularity++;

@@ -392,17 +392,23 @@ public class CsvDAO implements DataDAO {
     }
 
     public int getDataPointsToGranularity(int granularity) {
-        Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
-                .rows(new ComparisonPredicate(ComparisonPredicate.EQ,
-                                new ColumnExpression(ParentChildNode.DEPTH),
-                                new NumericLiteral(granularity))
-                );
-
+        logger.info("used granularity: "+granularity);
         int numberOfDataPoints = 0;
-        while(iterator.hasNext()){
-            numberOfDataPoints++;
-            iterator.next();
+        if(granularity>=0){
+            Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
+                    .rows(new ComparisonPredicate(ComparisonPredicate.EQ,
+                                    new ColumnExpression(ParentChildNode.DEPTH),
+                                    new NumericLiteral(granularity))
+                    );
+            while(iterator.hasNext()){
+                numberOfDataPoints++;
+                iterator.next();
+            }
+        }else{
+            logger.info("in ");
+            numberOfDataPoints= dataset.getNodeTable().getRowCount();
         }
+
         return numberOfDataPoints;
 
     }
