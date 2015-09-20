@@ -120,7 +120,8 @@ public class TemporalDataResource {
 
         do{
             desiredGranularity++;
-            expectedDataPoints = (int) (dataDAO.getDataPointsToGranularity(desiredGranularity+1)*percentOfData);
+            expectedDataPoints = (int) (dataDAO.getDataPointsToGranularity(desiredGranularity)*percentOfData);
+            logger.info("expected datapoints for granularity: "+desiredGranularity+ " is "+expectedDataPoints);
         } while(expectedDataPoints<=10000 && desiredGranularity <3);
 
         return desiredGranularity;
