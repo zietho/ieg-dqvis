@@ -23,7 +23,11 @@ define(['d3'], function (d3) {
             draggedChannel,
             min,
             max,
-            definedLine;
+            definedLine,
+            missingTimeStamps = [],
+            useCoalitionLabels = true,
+            cutoff = 50;
+
 
         /*  LAYERS  */
 
@@ -33,7 +37,7 @@ define(['d3'], function (d3) {
             line.defined(function(d){
                 var missing = true;
                 d.affectingIndicators.forEach(function (element, index, array) {
-                    if (element == "$.MissingData") {
+                    if (element == "$.MissingData" || element == "MissingTimeStamp") {
                         missing = false;
                     }
 
@@ -106,19 +110,13 @@ define(['d3'], function (d3) {
                 })
 
             paths.exit().remove();
-
-            console.log("width of path is: "+width);
-            console.log(margin);
-
         }
 
         function removeChannel(selectedPath){
             var id = selectedPath.attr("id");
             channels.forEach(function(column,index,array){
                 if(column.name==id) {
-                    console.log(index);
-                    channels.splice(index,1);
-                    console.log(channels);
+                   channels.splice(index,1);
                     selectedPath.remove();
                 }
             });
@@ -151,7 +149,6 @@ define(['d3'], function (d3) {
                 .attr("fill", selectedPath.style("stroke"))
                 .classed("removeCircle", true);
 
-            console.log(selectedPath.attr("fill"));
 
             /* Create the text for each block */
             var text = removeButton.append("text")
@@ -161,6 +158,103 @@ define(['d3'], function (d3) {
                 .classed("removeText", true);
         }
 
+        //to display missing values
+        layers.missingValues = function(){
+
+            //deep clone object, because of pass by reference
+            var missingDataValues = JSON.parse(JSON.stringify(channels)).filter(function(d) {
+                d.values = d.values.filter(function (value) {
+                    if (value.affectingIndicators.indexOf("$.MissingData") > -1){
+                        return value
+                    }
+                });
+
+                if(d.values.length>0)
+                    return d;
+            });
+
+            console.info(missingDataValues);
+
+            //update line path
+            missingDataValues.forEach(function(channel, index, array) {
+                var missingDataDots = g.selectAll("missingDataDots-"+channel.name)
+                    .data(channel.values);
+
+                //add new ones
+                missingDataDots
+                    .enter()
+                    .append("circle")
+                    .classed("missingDataDots-"+channel.name, true)
+                    .attr("id", function (d) {
+                        return channel.name + ".dots";
+                    })
+                    .attr("cx", function (d) {
+                        return X(d);
+                    })
+                    .attr("cy", function (d) {
+                        return Y(d)
+                    })
+                    .attr("r", 1.5)
+                    .style("stroke", function (d) {
+                        return color(channel.name);
+                    })
+
+
+                d3.transition().selectAll(".missingDataDots-"+channel.name)
+                    .attr("cx", function (d) {
+                        return X(d);
+                    })
+                    .attr("cy", function (d) {
+                        return Y(d)
+                    })
+
+                missingDataDots.exit().remove();
+
+                //var confidenceArea = d3.svg.area()
+                //    .interpolate(channel.values)
+                //    .x(function(d) { return X(d); })
+                //    .y0(function(d) {
+                //        return y(d["left"] - d["confidenceRight"]); })
+                //    .y1(function(d) {
+                //        return y(d["left"] + d["confidenceRight"]); });
+
+
+            })
+
+
+
+        }
+
+        //to display missing timestamps
+        layers.missingTimeStampMarker = function(){
+
+            //only get first channel!
+            var channel = channels[0];
+
+            var mtMarker = g.selectAll(".mtMarker")
+                .data(channel.values.filter(function(d){
+                    if(d.affectingIndicators.indexOf("MissingTimeStamp")>-1)
+                        return d
+                }))
+
+            mtMarker
+                .enter()
+                .append("text")
+                .classed("mtMarker", true)
+                .attr("x", function(d){
+                    return X(d);
+                })
+                .attr("y", height+5)
+                .style("fill","red")
+                .text("X");
+
+            d3.transition().selectAll(".mtMarker")
+                .attr("x", function(d){
+                    return X(d);
+                })
+
+            mtMarker.exit().remove();
+        }
 
         layers.labels = function(){
             var labels = g.selectAll("text.label")
@@ -196,7 +290,6 @@ define(['d3'], function (d3) {
                 .attr("class", "x axis")
                 .attr("transform", "translate(0," + height + ")");
 
-
             //y-axis
             g.append("g")
                 .attr("class", "y axis")
@@ -222,14 +315,8 @@ define(['d3'], function (d3) {
                     .append("g")
                     .attr("id","detailViewCanvas")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
                 layers.axes();
                 updateChannels(data);
-
-                layers.graph();
-                layers.labels();
-
 
                 svg
                     .on("mouseover", function(node) {
@@ -283,8 +370,10 @@ define(['d3'], function (d3) {
             d3.json(url, function (error, json) {
                 if (error) return console.warn(error);
                 callback(json);
-                layers.graph(channels);
+                layers.graph();
                 layers.labels();
+                layers.missingTimeStampMarker();
+                layers.missingValues();
             })
         }
 
@@ -422,5 +511,4 @@ define(['d3'], function (d3) {
     }
 
     return detailView;
-
 });

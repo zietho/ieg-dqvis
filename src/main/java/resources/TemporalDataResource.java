@@ -72,14 +72,25 @@ public class TemporalDataResource {
         }
         //loading multiple columns
         else if(!columns.isEmpty() && columns.size()>1){
-
-            logger.info("load multiple columns!");
             //individually
             if(load.isPresent() && load.get().equals("individually")){
                 for(String column:columns){
                     if(from.isPresent() && to.isPresent()){
                         int[] range = {from.get(), to.get()};
-                        temporalData.add(dataDAO.readAggregated(column, this.getLevel(granularity.get()), indicators, range));
+                        if(!granularity.get().equals("auto")) {
+                            logger.info("in indiv + not auto");
+                            temporalData.add(dataDAO.readAggregated(column, this.getLevel(granularity.get()), indicators, range));
+                        }else{
+                            logger.info("in indiv with suitable");
+
+                            int suitableGranularity = this.getSuitableGranularity(range);
+
+                            if(suitableGranularity<=3) {
+                                temporalData.add(dataDAO.readAggregated(column, suitableGranularity , indicators, range));
+                            }else{
+                                temporalData.add(dataDAO.readTimeSlice(column, indicators, range));
+                            }
+                        }
                     }else {
                         temporalData.add(dataDAO.readAggregated(column, this.getLevel(granularity.get()), indicators));
                     }
@@ -116,13 +127,16 @@ public class TemporalDataResource {
     public int getSuitableGranularity(int[] range){
         double percentOfData = (double) (range[1]-range[0])/100;
         int expectedDataPoints = 0;
-        int desiredGranularity = -2;
+        int desiredGranularity = -1;
 
         do{
             desiredGranularity++;
             expectedDataPoints = (int) (dataDAO.getDataPointsToGranularity(desiredGranularity)*percentOfData);
             logger.info("expected datapoints for granularity: "+desiredGranularity+ " is "+expectedDataPoints);
-        } while(expectedDataPoints<=10000 && desiredGranularity <3);
+            System.out.println("epected datapoints "+desiredGranularity+" is "+ expectedDataPoints);
+            if(expectedDataPoints>250)
+                desiredGranularity--;
+        } while(expectedDataPoints<=250 && desiredGranularity <4);
 
         return desiredGranularity;
     }

@@ -26,22 +26,17 @@ public interface DataDAO{
     public TemporalColumn read(String column);
 
     /**
-     * A method to retrieve only a slice of the whole data set.
-     * @param fomIndex
-     * @param toIndex
-     * @return
-     */
-    public TemporalData readTimeSlice(int fomIndex, int toIndex);
-
-    /**
      *
      * @param fromIndex
      * @param toIndex
      * @param column
      * @return
      */
-    public TemporalColumn readTimeSlice(int fromIndex, int toIndex, String column);
+    public TemporalColumn readTimeSlice(List<String> columns, List<String> indicators, int[] range);
 
+    public TemporalColumn readTimeSlice(List<String> columns, List<String> indicators);
+
+    public TemporalColumn readTimeSlice(String columns, List<String> indicators, int[] range);
     /**
      *
      * @return

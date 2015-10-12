@@ -101,49 +101,135 @@ public class CsvDAO implements DataDAO {
     }
 
     public TemporalColumn read(String column) {
-        return this.readTimeSlice(0, dataset.getTemporalObjectTable().getRowCount() - 1, column);
+        List<String> columns = new ArrayList();
+        columns.add(column);
+        return this.readTimeSlice(0, dataset.getTemporalObjectTable().getRowCount() - 1, columns);
     }
 
-    public TemporalData readTimeSlice(int fromIndex, int toIndex) {
-        TemporalData temporalData = new TemporalData();
-        for (int i = 0; i < datasetSchema.getColumnCount(); i++) {
-            temporalData.add(readTimeSlice(fromIndex, toIndex, datasetSchema.getColumnName(i)));
+    public TemporalColumn readTimeSlice(String column, List<String> indicators, int[] range){
+        List<String> columns = new ArrayList<String>();
+        columns.add(column);
+        return readTimeSlice(columns, indicators, range);
+    }
+
+    public TemporalColumn readTimeSlice(int fromIndex, int toIndex, List<String> columns) {
+
+        List<String> indicators = new ArrayList<String>();
+        //add all
+        indicators.add("$.MissingData");
+        indicators.add("$.InvalidData");
+        indicators.add("MissingTimeStamp");
+        int[] range = {fromIndex, toIndex};
+        return readTimeSlice(columns, indicators, range);
+
+    }
+
+    public TemporalColumn readTimeSlice(List<String> columns, List<String> indicators) {
+
+        //name new temporal column
+        TemporalColumn temporalColumn;
+        if (columns.size() == 1) {
+            temporalColumn = new TemporalColumn(columns.get(0));
+        } else if (columns.size() < (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0)) {
+            temporalColumn = new TemporalColumn("selected");
+        } else {
+            temporalColumn = new TemporalColumn("all");
         }
 
-        return temporalData;
-    }
+        int id;
+        double mean = 0, quality, missingTimestamp, q = 0, includeMissingValues, includeInvalidValues, includeMissingTimestamps;
+        long date;
+        List<AffectedChannel> affectedChannels;
+        List<String> affectingIndicators = new ArrayList<String>();
+        String mostImpactingColumn;
+        double mostImpactingColumnValue;
+        String mostImpactingIndicator = "";
+        double mostImpactingIndicatorValue;
+        double qualityByIndicator;
+        TemporalElementStore temporalElementStore =  dataset.getTemporalElements();
+        Table table = dataset.getTemporalObjectTable();
 
-    public TemporalColumn readTimeSlice(int fromIndex, int toIndex, String column) {
-        TemporalColumn temporalColumn = new TemporalColumn(column);
-        TemporalElementStore temporalElementStore = dataset.getTemporalElements();
 
-        if (column != null && !column.equals("")) {
-            Table table = dataset.getTemporalObjectTable();
+        for (int i = 0; i < temporalElementStore.getNodeTable().getRowCount(); i++) {
 
-            //first get the column and convert it to an array list
-            Column dataColumn = table.getColumn(column);
-            Column missingDataColumn = table.getColumn(column + ".MissingData");
-            Column invalidDataColumn = table.getColumn(column + ".InvalidData");
+            //define date value
+            long inf = temporalElementStore.getTemporalElementByRow(i).getInf();
+            long sup = temporalElementStore.getTemporalElementByRow(i).getSup();
+            date = (inf == sup) ? inf : 0;
 
-            for (int i = 0; i < dataColumn.getRowCount(); i++) {
-                double dataValue = dataColumn.getDouble(i);
-                double qualityValue = 0;
-                if (missingDataColumn != null && invalidDataColumn != null) {
-                    qualityValue = (missingDataColumn.get(i) == 1 || invalidDataColumn.get(i) == 1) ? 1 : 0;
+            // missingTimestamp = temporalObject.getDouble("MissingTimeStamp");
+            quality = 0;
+            mean = 0;
+
+            mostImpactingColumn = "";
+            mostImpactingColumnValue = 0;
+            affectedChannels = new ArrayList<AffectedChannel>();
+            Column dataColumn;
+
+            //iterate over all the different column
+            for (String column : columns) {
+
+
+
+                mostImpactingIndicator = "";
+                mostImpactingIndicatorValue = 0;
+                affectingIndicators = new ArrayList<String>();
+
+
+                for (String indicator : indicators) {
+                    //check if its a pattern
+                    String in = indicator;
+                    indicator = indicator.replaceAll("\\$", column);
+                    dataColumn = table.getColumn(indicator);
+                    qualityByIndicator = dataColumn.getDouble(i);
+
+                    if (qualityByIndicator > mostImpactingIndicatorValue) {
+                        mostImpactingIndicator = in;
+                        mostImpactingIndicatorValue = qualityByIndicator;
+                    }
+                    q += qualityByIndicator;
+
+                    if (qualityByIndicator > 0) {
+                        if (!affectingIndicators.contains(in)) {
+                            affectingIndicators.add(in);
+                        }
+                    }
+
                 }
-                long inf = temporalElementStore.getTemporalElementByRow(i).getInf();
-                long sup = temporalElementStore.getTemporalElementByRow(i).getSup();
-                long dateValue = (inf == sup) ? inf : 0;
 
-                if (inf != sup) {
-                    logger.warn("inf: {} and sup: {} are not the same", inf, sup);
+                double columnQuality = q / indicators.size();
+                quality += columnQuality;
+
+                //retrieve most impacting channel
+                if (columnQuality > mostImpactingColumnValue) {
+                    mostImpactingColumn = column;
+                    mostImpactingColumnValue = columnQuality;
                 }
 
-                temporalColumn.add(new TemporalValue(dateValue, dataValue, qualityValue));
+                //add channels with data deficiencies
+                if (columnQuality > 0) {
+                    affectedChannels.add(new AffectedChannel(column, mostImpactingIndicator));
+                }
+
+                q = 0; //reset local aggregated quality
+                mean += table.getColumn(column).getDouble(i);
             }
+
+            AffectedChannel affectedChannel = new AffectedChannel(mostImpactingColumn, mostImpactingIndicator);
+            quality = (quality / columns.size());
+            mean = mean / columns.size();
+            TemporalValue temporalValue = new TemporalValue(date, mean, quality, affectedChannels, affectingIndicators);
+            temporalColumn.add(temporalValue);
+
         }
 
         return temporalColumn;
+    }
+
+    public TemporalColumn readTimeSlice(List<String> columns, List<String> indicators, int[] range) {
+        //first, get all available values
+        TemporalColumn temporalColumn = readTimeSlice(columns, indicators);
+        return slice(temporalColumn, range);
     }
 
     public GranularityAggregationTree aggregate() {
@@ -290,7 +376,9 @@ public class CsvDAO implements DataDAO {
                     String in = indicator;
                     indicator = indicator.replaceAll("\\$", column);
                     qualityByIndicator = temporalObject.getDouble(indicator);
-
+                    if(indicator.equals("MissingTimeStamp")) {
+                        logger.info("missing time stamp for"+date + " :" + temporalObject.getFloat(indicator));
+                    }
                     if (qualityByIndicator > mostImpactingIndicatorValue) {
                         mostImpactingIndicator = in;
                         mostImpactingIndicatorValue = qualityByIndicator;
@@ -340,7 +428,11 @@ public class CsvDAO implements DataDAO {
     public TemporalColumn readAggregated(List<String> columns, int granularity, List<String> indicators, int[] range) {
         //first, get all available values
         TemporalColumn temporalColumn = readAggregated(columns, granularity, indicators);
+        return slice(temporalColumn, range);
+    }
 
+
+    public TemporalColumn slice(TemporalColumn temporalColumn, int[] range){
         //retrieve size of all values and the lower and upper bound of this number
         int numberOfElements = temporalColumn.getValues().size();
         logger.info("before" + numberOfElements);
@@ -394,7 +486,7 @@ public class CsvDAO implements DataDAO {
     public int getDataPointsToGranularity(int granularity) {
         logger.info("used granularity: "+granularity);
         int numberOfDataPoints = 0;
-        if(granularity>=0){
+        if(granularity<=3){
             Iterator<Integer> iterator = aggregatedDataset.getNodeTable()
                     .rows(new ComparisonPredicate(ComparisonPredicate.EQ,
                                     new ColumnExpression(ParentChildNode.DEPTH),

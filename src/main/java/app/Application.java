@@ -28,7 +28,7 @@ public class Application extends io.dropwizard.Application<ApplicationConfigurat
     @Override
     public void initialize(Bootstrap bootstrap) {
         //set paths for data and initialize a DAO object for retrieving data
-        final String data = "src/main/resources/data/01_raw_data_set1_preprocessed_markus.csv";
+        final String data = "src/main/resources/data/01_raw_data_set1_preprocessed_markus_prep1.csv";
         final String spec = "src/main/resources/data/spec2.xml";
         this.dataDAO = CsvDAO.getInstance(data,spec); //init implementation of dataDAO
 

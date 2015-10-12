@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
  */
 public class TemporalDataResourceTest {
     private static final Logger logger = LoggerFactory.getLogger(TemporalDataResourceTest.class);
-    private static String data = "src/test/resources/data/test.csv";
+    private static String data = "src/test/resources/data/01_raw_data_set1_preprocessed.csv";
     private static String spec = "src/test/resources/data/test.xml";
 
     @ClassRule
