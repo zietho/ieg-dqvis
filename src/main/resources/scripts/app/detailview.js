@@ -173,7 +173,16 @@ define(['d3'], function (d3) {
                     return d;
             });
 
+
+            missingDataValues.forEach(function(channel){
+                var n = channel.values.length; //population
+                channel.values.forEach(function(d){
+                    d["confidence"] = se95(d.column,n);
+                });
+            })
+
             console.info(missingDataValues);
+            console.log("HALLLOO");
 
             //update line path
             missingDataValues.forEach(function(channel, index, array) {
@@ -210,25 +219,29 @@ define(['d3'], function (d3) {
 
                 missingDataDots.exit().remove();
 
-                //var confidenceArea = d3.svg.area()
-                //    .interpolate(channel.values)
-                //    .x(function(d) { return X(d); })
-                //    .y0(function(d) {
-                //        return y(d["left"] - d["confidenceRight"]); })
-                //    .y1(function(d) {
-                //        return y(d["left"] + d["confidenceRight"]); });
+                var confidenceArea = d3.svg.area()
+                    .interpolate(channel.values)
+                    .x(function(d) { return X(d); })
+                    .y0(function(d) {
+                        return y(d.column - d.confidence); })
+                    .y1(function(d) {
+                        return y(d.column + d.confidence); });
+
+                g.append("path")
+                    .attr({
+                        "class": "area confidence",
+                        "fill" : "#2B83BA",
+                        "d"    : confidenceArea
+                    })
 
 
             })
-
-
-
         }
 
         //to display missing timestamps
         layers.missingTimeStampMarker = function(){
 
-            //only get first channel!
+            //only get first channel! because we only need to do this once, as a missing time stamp spans over all channels
             var channel = channels[0];
 
             var mtMarker = g.selectAll(".mtMarker")
@@ -236,6 +249,9 @@ define(['d3'], function (d3) {
                     if(d.affectingIndicators.indexOf("MissingTimeStamp")>-1)
                         return d
                 }))
+
+            console.info("only the missing time stamps:" + mtMarker);
+            console.log("HALLO");
 
             mtMarker
                 .enter()
@@ -386,6 +402,11 @@ define(['d3'], function (d3) {
         function Y(d) {
             return yScale(+d.column);
         }
+
+        // Return standard error with 95% confidence
+        function se95(p, n) {
+            return Math.sqrt(Math.abs(p*(1-p)/n)*1.96);
+        };
 
         chart.width = function () {
             return width;
