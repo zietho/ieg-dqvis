@@ -182,7 +182,7 @@ define(['d3'], function (d3) {
             })
 
             console.info(missingDataValues);
-            console.log("HALLLOO");
+
 
             //update line path
             missingDataValues.forEach(function(channel, index, array) {
@@ -244,6 +244,8 @@ define(['d3'], function (d3) {
             //only get first channel! because we only need to do this once, as a missing time stamp spans over all channels
             var channel = channels[0];
 
+            console.log("channel before filter");
+            console.log(channel);
             var mtMarker = g.selectAll(".mtMarker")
                 .data(channel.values.filter(function(d){
                     if(d.affectingIndicators.indexOf("MissingTimeStamp")>-1)

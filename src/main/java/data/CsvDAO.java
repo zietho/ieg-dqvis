@@ -289,7 +289,6 @@ public class CsvDAO implements DataDAO {
         return readAggregated(columns, granularity);
     }
 
-
     public TemporalColumn readAggregated(int granularity, List<String> indicators, int range[]) {
         List<String> columns = new ArrayList<String>();
         int numberOfColumns = (int) Math.ceil((this.datasetSchema.getColumnCount() - 2.0) / 3.0);
@@ -359,7 +358,6 @@ public class CsvDAO implements DataDAO {
             quality = 0;
             mean = 0;
 
-
             mostImpactingColumn = "";
             mostImpactingColumnValue = 0;
             affectedChannels = new ArrayList<AffectedChannel>();
@@ -390,9 +388,7 @@ public class CsvDAO implements DataDAO {
                             affectingIndicators.add(in);
                         }
                     }
-
                 }
-
 
                 double columnQuality = q / indicators.size();
                 quality += columnQuality;
@@ -410,8 +406,6 @@ public class CsvDAO implements DataDAO {
 
                 q = 0; //reset local aggregated quality
                 mean += temporalObject.getDouble(column);
-
-
             }
 
             AffectedChannel affectedChannel = new AffectedChannel(mostImpactingColumn, mostImpactingIndicator);
@@ -435,15 +429,15 @@ public class CsvDAO implements DataDAO {
     public TemporalColumn slice(TemporalColumn temporalColumn, int[] range){
         //retrieve size of all values and the lower and upper bound of this number
         int numberOfElements = temporalColumn.getValues().size();
-        logger.info("before" + numberOfElements);
+        logger.info("number of elements" + numberOfElements);
         if (range != null) {
             int lowerBound = (int) Math.round(numberOfElements * ((double) range[0] / 100));
             int upperBound = (int) Math.round(numberOfElements * ((double) range[1] / 100));
 
             //slice the data and only return the requested data slice instead of the full range of the data - +1 cauz toIndex is excluded by default
             logger.info("lower bound:"+lowerBound);
-            logger.info("before bound:"+upperBound);
-            temporalColumn.setValues(temporalColumn.getValues().subList(lowerBound, upperBound-1));
+            logger.info("upper bound:"+upperBound);
+            temporalColumn.setValues(temporalColumn.getValues().subList(lowerBound, upperBound));
         }
 
         logger.info("after" + temporalColumn.getValues().size());
