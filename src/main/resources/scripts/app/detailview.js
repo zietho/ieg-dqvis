@@ -26,7 +26,8 @@ define(['d3'], function (d3) {
             definedLine,
             missingTimeStamps = [],
             useCoalitionLabels = true,
-            cutoff = 50;
+            cutoff = 50,
+            interpolation = "linear";
 
 
         /*  LAYERS  */
@@ -116,7 +117,7 @@ define(['d3'], function (d3) {
             var id = selectedPath.attr("id");
             channels.forEach(function(column,index,array){
                 if(column.name==id) {
-                   channels.splice(index,1);
+                    channels.splice(index,1);
                     selectedPath.remove();
                 }
             });
@@ -173,43 +174,63 @@ define(['d3'], function (d3) {
                     return d;
             });
 
-
-            missingDataValues.forEach(function(channel){
-                var n = channel.values.length; //population
+            //calculate confidence values for each missing value
+            channels.forEach(function(channel){
+                var n = channel.values.length;
                 channel.values.forEach(function(d){
                     d["confidence"] = se95(d.column,n);
                 });
-            })
+            });
 
-            console.info(missingDataValues);
+            //define line functions for both the upper and lower confidence interval
+            var lineUpperBoundary = d3.svg.line()
+                .defined(function(d){
+                    var missing = false;
+                    d.affectingIndicators.forEach(function (element, index, array) {
+                        if (element == "$.MissingData" || element == "MissingTimeStamp") {
+                            missing = true;
+                        }
+                    })
+                    return missing;
+                })
+                .x(function(d) { return X(d); })
+                .y(function(d) {return yScale(d.column + d.confidence); })
 
+            var lineLowerBoundary = d3.svg.line()
+                .defined(function(d){
+                    var missing = false;
+                    d.affectingIndicators.forEach(function (element, index, array) {
+                        if (element == "$.MissingData" || element == "MissingTimeStamp") {
+                            missing = true;
+                        }
+                    })
+                    return missing;
+                })
+                .x(function(d) { return X(d); })
+                .y(function(d) { return yScale(d.column - d.confidence); })
 
             //update line path
             missingDataValues.forEach(function(channel, index, array) {
-                var missingDataDots = g.selectAll("missingDataDots-"+channel.name)
+                var missingDataDots = g.selectAll("circle.missingDataDot-"+channel.name)
                     .data(channel.values);
 
                 //add new ones
                 missingDataDots
                     .enter()
                     .append("circle")
-                    .classed("missingDataDots-"+channel.name, true)
-                    .attr("id", function (d) {
-                        return channel.name + ".dots";
-                    })
+                    .classed("missingDataDot-"+channel.name, true)
                     .attr("cx", function (d) {
                         return X(d);
                     })
                     .attr("cy", function (d) {
                         return Y(d)
                     })
-                    .attr("r", 1.5)
+                    .attr("r", 2)
                     .style("stroke", function (d) {
                         return color(channel.name);
                     })
 
-
-                d3.transition().selectAll(".missingDataDots-"+channel.name)
+                d3.transition().selectAll("circle.missingDataDot-"+channel.name)
                     .attr("cx", function (d) {
                         return X(d);
                     })
@@ -219,23 +240,53 @@ define(['d3'], function (d3) {
 
                 missingDataDots.exit().remove();
 
-                var confidenceArea = d3.svg.area()
-                    .interpolate(channel.values)
-                    .x(function(d) { return X(d); })
-                    .y0(function(d) {
-                        return y(d.column - d.confidence); })
-                    .y1(function(d) {
-                        return y(d.column + d.confidence); });
+            });
 
-                g.append("path")
-                    .attr({
-                        "class": "area confidence",
-                        "fill" : "#2B83BA",
-                        "d"    : confidenceArea
-                    })
+            var upperBoundaries = g.selectAll("path.upperBoundary")
+                .data(channels)
+
+            var u = upperBoundaries
+                .enter()
+                .append("path")
+                .classed("upperBoundary", true)
+                .attr("d", function(d){
+                    return lineUpperBoundary(d.values);
+                })
+                .style("stroke", function (d) {
+                    return color(d.name);
+                })
+                .style("stroke-width", 2)
+
+            var lowerBoundaries = g.selectAll("path.lowerBoundary")
+                .data(channels)
+
+            var l = lowerBoundaries
+                .enter()
+                .append("path")
+                .classed("lowerBoundary", true)
+                .attr("d", function(d){
+                    return lineLowerBoundary(d.values);
+                })
+                .style("stroke", function (d) {
+                    return color(d.name);
+                })
+                .style("stroke-width", 2)
 
 
-            })
+            //on transition move paths
+            d3.transition().selectAll("path.upperBoundary")
+                .attr("d", function (d) {
+                    return lineUpperBoundary(d.values);
+                })
+
+            d3.transition().selectAll("path.lowerBoundary")
+                .attr("d", function (d) {
+                    return lineLowerBoundary(d.values);
+                })
+
+            //on exit selection - remove paths
+            lowerBoundaries.exit().remove();
+            upperBoundaries.exit().remove();
         }
 
         //to display missing timestamps
@@ -264,6 +315,7 @@ define(['d3'], function (d3) {
                 })
                 .attr("y", height+5)
                 .style("fill","red")
+                .style("stroke-width",10)
                 .text("X");
 
             d3.transition().selectAll(".mtMarker")
@@ -372,10 +424,10 @@ define(['d3'], function (d3) {
         function updateChannels(data){
             var contained = false;
             channels.forEach(function(element,index,array){
-                  if(element.name==data.name) {
-                      element.values = data.values;
-                      contained = true;
-                  }
+                if(element.name==data.name) {
+                    element.values = data.values;
+                    contained = true;
+                }
             });
 
             if(!contained){
@@ -483,10 +535,10 @@ define(['d3'], function (d3) {
         chart.addColumn = function (column) {
             if(min>=0 && min<100 & max>0 && max<=100){
                 var url = serverUrl
-                            + "/get-data?column="+column
-                            + "&from="+min
-                            + "&to="+max
-                            + "&granularity=auto&load=individually";
+                    + "/get-data?column="+column
+                    + "&from="+min
+                    + "&to="+max
+                    + "&granularity=auto&load=individually";
             }else{
                 var url = serverUrl + "/get-data?column="+column+"&granularity=minute&load=individually";
             }
@@ -518,10 +570,10 @@ define(['d3'], function (d3) {
 
             loadChannel(url, function(json){
                 json.columns.forEach(function(element,index,array){
-                   updateChannels(element);
+                    updateChannels(element);
                 });
             });
-         }
+        }
 
         chart.definedLine = function(_){
             if (!arguments.length) return indicators;

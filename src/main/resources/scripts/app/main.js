@@ -44,6 +44,20 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
             return new Date(+d.date);
         })
 
+    //******** DETAIL VIEW *****************************
+    //**************************************************
+    var detailView;
+    detailView = dv()
+        .x(function (d) {
+            return new Date(+d.date);
+        })
+        .y(function (d) {
+            return +d.column;
+        })
+        .height(300)
+        .width(800)
+        .serverUrl(serverUrl)
+
     //load all stripe and draw the quality view
     d3.json(serverUrl + "/get-data?column=all&granularity=minute", function (error, json) {
         if (error) return console.warn(error);
@@ -71,31 +85,6 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
                 qualityView.addQualityStripe(element);
             });
         })
-    });
-
-     //******** DETAIL VIEW *****************************
-     //**************************************************
-    var detailView;
-    detailView = dv()
-        .x(function (d) {
-            return new Date(+d.date);
-        })
-        .y(function (d) {
-            return +d.column;
-        })
-        .height(300)
-        .width(800)
-        .serverUrl(serverUrl)
-        //.definedLine(function (d) {
-        //    var missing = false;
-        //    d.affectedIndicators.forEach(function (element, index, array) {
-        //        if(element=="$.MissingData"){
-        //            missing = true;
-        //        }
-        //    })
-        //
-        //    return missing;
-        //})
 
         //load all stripe and draw the quality view
         d3.json(serverUrl + "/get-data?column=h&granularity=minute&load=individually", function (error, json) {
@@ -107,5 +96,20 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
 
         detailView.addColumn("w");
         detailView.addColumn("m1");
+    });
+
+
+        //.definedLine(function (d) {
+        //    var missing = false;
+        //    d.affectedIndicators.forEach(function (element, index, array) {
+        //        if(element=="$.MissingData"){
+        //            missing = true;
+        //        }
+        //    })
+        //
+        //    return missing;
+        //})
+
+
 
 });
