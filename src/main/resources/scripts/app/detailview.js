@@ -38,7 +38,7 @@ define(['d3'], function (d3) {
             line.defined(function(d){
                 var missing = true;
                 d.affectingIndicators.forEach(function (element, index, array) {
-                    if (element == "$.MissingData" || element == "MissingTimeStamp") {
+                    if (element == "$.MissingData" || element == "MissingTimeStamp" || element == "$.InvalidData") {
                         missing = false;
                     }
 
@@ -57,10 +57,24 @@ define(['d3'], function (d3) {
             yScale
                 .domain([
                     d3.min(channels, function (d) {
-                        return d3.min(d.values, yValue)
+                        //for scaling only consider valid values!
+                        var values = d.values.filter(function (value) {
+                            if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0){
+                                return value
+                            }
+                        });
+
+                        return d3.min(values, yValue)
                     }),
                     d3.max(channels, function (d) {
-                        return d3.max(d.values, yValue)
+                        //for scaling only consider valid values!
+                        var values =  d.values.filter(function (value) {
+                            if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0){
+                                return value
+                            }
+                        });
+
+                        return d3.max(values, yValue)
                     })
                 ])
                 .range([height, 0]);
@@ -163,16 +177,7 @@ define(['d3'], function (d3) {
         layers.missingValues = function(){
 
             //deep clone object, because of pass by reference
-            var missingDataValues = JSON.parse(JSON.stringify(channels)).filter(function(d) {
-                d.values = d.values.filter(function (value) {
-                    if (value.affectingIndicators.indexOf("$.MissingData") > -1){
-                        return value
-                    }
-                });
-
-                if(d.values.length>0)
-                    return d;
-            });
+            var missingDataValues = filterDataQualityValues(channels, "$.MissingData");
 
             //calculate confidence values for each missing value
             channels.forEach(function(channel){
@@ -209,7 +214,7 @@ define(['d3'], function (d3) {
                 .x(function(d) { return X(d); })
                 .y(function(d) { return yScale(d.column - d.confidence); })
 
-            //update line path
+            //display dots
             missingDataValues.forEach(function(channel, index, array) {
                 var missingDataDots = g.selectAll("circle.missingDataDot-"+channel.name)
                     .data(channel.values);
@@ -289,22 +294,120 @@ define(['d3'], function (d3) {
             upperBoundaries.exit().remove();
         }
 
+        //displaying
+        layers.invalidValues = function(){
+            //1. retrieve all invalid values for later display.
+            var invalidValuesData = filterDataQualityValues(channels, "$.InvalidData");
+
+            //2. retrieve all valid values in order to calculate the local minium and maximum for each channel.
+            var validValues = JSON.parse(JSON.stringify(channels)).filter(function(d) {
+                d.values = d.values.filter(function (value) {
+                    //only return the value if the array with affecting Indicators is either undefined or empty.
+                    if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0){
+                        return value
+                    }
+                });
+
+                //calculate the local minimum and maximum value for all valid values of the the respective channel
+                //note: only available within the valid values
+                d.max =  d3.max(d.values, yValue)
+                d.min = d3.min(d.values, yValue)
+
+                if(d.values.length>0)
+                    return d;
+            });
+
+
+            //// von den validen daten den max und min wert berechnen.
+            //invalidValuesData.forEach(function(channel,index,array){
+            //    var validValuesPerChannel = validValues.filter(function(d){
+            //        if (d.name === channel.name) {
+            //            return d;
+            //        }
+            //    })
+            //});
+
+            //update line path
+            invalidValuesData.forEach(function(channel, index, array) {
+                //for each channel retrieve the calculated local minimum min and max.
+                var channelMax, channelMin;
+
+                //because the local min and max is only available for the valid data, it is saved there
+                validValues.forEach(function(c, index, array){
+                    if(channel.name==c.name){
+                        channelMax = c.max;
+                        channelMin = c.min;
+                    }
+                });
+
+
+                //draw invaliv values
+                var invalidDataRect = g.selectAll("rect.invalidValueRect-"+channel.name)
+                    .data(channel.values);
+
+                //add new ones
+                invalidDataRect
+                    .enter()
+                    .append("rect")
+                    .classed("invalidValueRect-"+channel.name, true)
+                    .attr("x", function (d) {
+                        return X(d);
+                    })
+                    .attr("y", function (d) {
+                        var distanceToMax = Math.abs(channelMax - Y(d));
+                        var distanceToMin = Math.abs(channelMin - Y(d));
+
+                        if(distanceToMax<=distanceToMin){
+                            return yScale(channelMax);
+                        }else{
+                            return yScale(channelMin);
+                        }
+
+                    })
+                    .attr("width", 2)
+                    .attr("height",2)
+                    .style("fill", function (d) {
+                        return color(channel.name);
+                        return "black";
+                    })
+
+                d3.transition().selectAll("rect.invalidValueRect-"+channel.name)
+                    .attr("x", function (d) {
+                        return X(d);
+                    })
+                    .attr("y", function (d) {
+                        var distanceToMax = Math.abs(channelMax - Y(d));
+                        var distanceToMin = Math.abs(channelMin - Y(d));
+
+                        if(distanceToMax<=distanceToMin){
+                            return yScale(channelMax);
+                        }else{
+                            return yScale(channelMin);
+                        }
+
+
+                    })
+
+                invalidDataRect.exit().remove();
+
+            });
+
+
+
+        }
+
         //to display missing timestamps
         layers.missingTimeStampMarker = function(){
 
             //only get first channel! because we only need to do this once, as a missing time stamp spans over all channels
             var channel = channels[0];
 
-            console.log("channel before filter");
-            console.log(channel);
+
             var mtMarker = g.selectAll(".mtMarker")
                 .data(channel.values.filter(function(d){
                     if(d.affectingIndicators.indexOf("MissingTimeStamp")>-1)
                         return d
                 }))
-
-            console.info("only the missing time stamps:" + mtMarker);
-            console.log("HALLO");
 
             mtMarker
                 .enter()
@@ -420,12 +523,14 @@ define(['d3'], function (d3) {
 
         }
 
-
         function updateChannels(data){
             var contained = false;
             channels.forEach(function(element,index,array){
                 if(element.name==data.name) {
                     element.values = data.values;
+
+                    //calc max and min
+
                     contained = true;
                 }
             });
@@ -435,7 +540,6 @@ define(['d3'], function (d3) {
             }
         }
 
-
         function loadChannel(url, callback){
             d3.json(url, function (error, json) {
                 if (error) return console.warn(error);
@@ -444,6 +548,7 @@ define(['d3'], function (d3) {
                 layers.labels();
                 layers.missingTimeStampMarker();
                 layers.missingValues();
+                layers.invalidValues();
             })
         }
 
@@ -461,6 +566,20 @@ define(['d3'], function (d3) {
         function se95(p, n) {
             return Math.sqrt(Math.abs(p*(1-p)/n)*1.96);
         };
+
+        function filterDataQualityValues(channel, qualityProblem ){
+            //deep clone object, because of pass by reference
+            return JSON.parse(JSON.stringify(channels)).filter(function(d) {
+                d.values = d.values.filter(function (value) {
+                    if (value.affectingIndicators.indexOf(qualityProblem) > -1){
+                        return value
+                    }
+                });
+
+                if(d.values.length>0)
+                    return d;
+            });
+        }
 
         chart.width = function () {
             return width;
@@ -580,7 +699,6 @@ define(['d3'], function (d3) {
             indicators = _;
             return chart;
         }
-
 
         return chart;
     }
