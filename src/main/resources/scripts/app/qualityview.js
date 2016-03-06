@@ -27,6 +27,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .range([colorbrewer.Reds[9], colorbrewer.Blues[9], colorbrewer.Greens[9], colorbrewer.Purples[9]]),
             indicators = [],
             sliderCallBack,
+            qualityIndicatorCallBack,
             xScale = d3.time.scale(), //set x-scale and range
             xAxis = d3.svg.axis().scale(xScale).orient("top"),
             qualityStripeHeight = 25,
@@ -254,6 +255,10 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 });
             })
 
+            //call back for detail view here!
+            qualityIndicatorCallBack(currentValue);
+
+
             qualityIndicator = currentValue; //set qualityIndicator
         }
 
@@ -420,6 +425,12 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
         chart.sliderCallBack = function(_){
             if(!arguments.length) return sliderCallBack;
             sliderCallBack = _;
+            return chart;
+        }
+
+        chart.qualityIndicatorCallBack = function(_){
+            if(!arguments.length) return qualityIndicatorCallBack;
+            qualityIndicatorCallBack = _;
             return chart;
         }
 

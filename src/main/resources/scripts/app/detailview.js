@@ -23,6 +23,9 @@ define(['d3'], function (d3) {
             draggedChannel,
             min,
             max,
+            maxValue,
+            minValue,
+            qualityIndicator,
             definedLine,
             missingTimeStamps = [],
             useCoalitionLabels = true,
@@ -56,26 +59,16 @@ define(['d3'], function (d3) {
 
             yScale
                 .domain([
-                    d3.min(channels, function (d) {
-                        //for scaling only consider valid values!
-                        var values = d.values.filter(function (value) {
-                            if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0){
-                                return value
-                            }
-                        });
-
-                        return d3.min(values, yValue)
-                    }),
-                    d3.max(channels, function (d) {
-                        //for scaling only consider valid values!
-                        var values =  d.values.filter(function (value) {
-                            if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0){
-                                return value
-                            }
-                        });
-
-                        return d3.max(values, yValue)
-                    })
+                    function(){
+                        //var min =  getMinimumValidValue();
+                        //var max = getMaximumValidValue();
+                        return minValue-((maxValue-minValue)*0.10);
+                    }(),
+                    function(){
+                        //var min = getMinimumValidValue();
+                        //var max = getMaximumValidValue();
+                        return maxValue+((maxValue-minValue)*0.10);
+                    }()
                 ])
                 .range([height, 0]);
 
@@ -125,6 +118,34 @@ define(['d3'], function (d3) {
                 })
 
             paths.exit().remove();
+        }
+
+        function getMinimumValidValue(){
+            return d3.min(channels, function (d) {
+                //for scaling only consider valid values!
+                var values = d.values.filter(function (value) {
+                    if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0){
+                        return value;
+                    }
+                })
+
+                return d3.min(values, yValue);
+            })
+        }
+
+
+        function getMaximumValidValue(){
+            return d3.max(channels, function (d) {
+                //for scaling only consider valid values!
+                var values =  d.values.filter(function (value) {
+                    if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0){
+                        //value.column = value.column+value.confidence;
+                        return value;
+                    }
+                });
+
+                return d3.max(values, yValue)
+            })
         }
 
         function removeChannel(selectedPath){
@@ -193,7 +214,7 @@ define(['d3'], function (d3) {
                     var missing = false;
                     d.affectingIndicators.forEach(function (element, index, array) {
                         if (element == "$.MissingData" || element == "MissingTimeStamp") {
-                            missing = true;
+                            missing = true
                         }
                     })
                     return missing;
@@ -215,6 +236,11 @@ define(['d3'], function (d3) {
                 .y(function(d) { return yScale(d.column - d.confidence); })
 
             //display dots
+
+            console.log("elements");
+            console.log(missingDataValues.length);
+            console.log(missingDataValues);
+
             missingDataValues.forEach(function(channel, index, array) {
                 var missingDataDots = g.selectAll("circle.missingDataDot-"+channel.name)
                     .data(channel.values);
@@ -253,6 +279,7 @@ define(['d3'], function (d3) {
             var u = upperBoundaries
                 .enter()
                 .append("path")
+                .style("stroke-dasharray", ("3, 3"))
                 .classed("upperBoundary", true)
                 .attr("d", function(d){
                     return lineUpperBoundary(d.values);
@@ -268,6 +295,7 @@ define(['d3'], function (d3) {
             var l = lowerBoundaries
                 .enter()
                 .append("path")
+                .style("stroke-dasharray", ("3, 3")) // dashed confidence intervalls
                 .classed("lowerBoundary", true)
                 .attr("d", function(d){
                     return lineLowerBoundary(d.values);
@@ -278,16 +306,16 @@ define(['d3'], function (d3) {
                 .style("stroke-width", 2)
 
 
-            //on transition move paths
-            d3.transition().selectAll("path.upperBoundary")
-                .attr("d", function (d) {
-                    return lineUpperBoundary(d.values);
-                })
+                //on transition move paths
+                d3.transition().selectAll("path.upperBoundary")
+                    .attr("d", function (d) {
+                        return lineUpperBoundary(d.values);
+                    })
 
-            d3.transition().selectAll("path.lowerBoundary")
-                .attr("d", function (d) {
-                    return lineLowerBoundary(d.values);
-                })
+                d3.transition().selectAll("path.lowerBoundary")
+                    .attr("d", function (d) {
+                        return lineLowerBoundary(d.values);
+                    })
 
             //on exit selection - remove paths
             lowerBoundaries.exit().remove();
@@ -317,15 +345,6 @@ define(['d3'], function (d3) {
                     return d;
             });
 
-
-            //// von den validen daten den max und min wert berechnen.
-            //invalidValuesData.forEach(function(channel,index,array){
-            //    var validValuesPerChannel = validValues.filter(function(d){
-            //        if (d.name === channel.name) {
-            //            return d;
-            //        }
-            //    })
-            //});
 
             //update line path
             invalidValuesData.forEach(function(channel, index, array) {
@@ -364,8 +383,8 @@ define(['d3'], function (d3) {
                         }
 
                     })
-                    .attr("width", 2)
-                    .attr("height",2)
+                    .attr("width", 3)
+                    .attr("height",3)
                     .style("fill", function (d) {
                         return color(channel.name);
                         return "black";
@@ -379,13 +398,12 @@ define(['d3'], function (d3) {
                         var distanceToMax = Math.abs(channelMax - Y(d));
                         var distanceToMin = Math.abs(channelMin - Y(d));
 
+
                         if(distanceToMax<=distanceToMin){
                             return yScale(channelMax);
                         }else{
                             return yScale(channelMin);
                         }
-
-
                     })
 
                 invalidDataRect.exit().remove();
@@ -528,9 +546,7 @@ define(['d3'], function (d3) {
             channels.forEach(function(element,index,array){
                 if(element.name==data.name) {
                     element.values = data.values;
-
                     //calc max and min
-
                     contained = true;
                 }
             });
@@ -538,6 +554,9 @@ define(['d3'], function (d3) {
             if(!contained){
                 channels.push(data);
             }
+
+            maxValue = getMaximumValidValue();
+            minValue = getMinimumValidValue();
         }
 
         function loadChannel(url, callback){
@@ -692,6 +711,40 @@ define(['d3'], function (d3) {
                     updateChannels(element);
                 });
             });
+        }
+        chart.setQualityIndicator = function(value){
+            console.log("value set to " + value);
+
+            if(qualityIndicator!=value) {
+                //set current quality indicator
+                qualityIndicator=value;
+
+                //remove all unecessary layers here!
+                if (qualityIndicator=="$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp") {
+
+                } else {
+                    //remove all layers
+                    invalidDataRect.remove();
+
+
+                    //add class to rect so you can select all!
+                    //or select elements with "rect.invalidValueRect-" contained within the class
+                    //remove all element
+                }
+
+                //add respective data quality indicator
+                //layers. invalidValues
+
+
+                //.mtMarker
+                //layers. missingTimeStampMarker
+
+
+                //missingDataDot
+
+                //layers. missingValues
+            }
+
         }
 
         chart.definedLine = function(_){

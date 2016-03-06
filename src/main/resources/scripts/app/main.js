@@ -40,6 +40,9 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
         .sliderCallBack(function(evt, value){
             detailView.setRange(value);
         })
+        .qualityIndicatorCallBack(function(value){
+            detailView.setQualityIndicator(value);
+        })
         .x(function (d) {
             return new Date(+d.date);
         })
