@@ -12,7 +12,18 @@ define(['d3'], function (d3) {
             yScale = d3.scale.linear(), //set y-scale and range
             xAxis = d3.svg.axis().scale(xScale).orient("bottom"),
             yAxis = d3.svg.axis().scale(yScale).orient("left"),
-            line = d3.svg.line().x(X).y(Y),
+            line = d3.svg.line().x(X).y(Y)
+                .defined(function(d){
+                    var missing = true;
+                    d.affectingIndicators.forEach(function (element, index, array) {
+                        if (element == "$.MissingData" || element == "MissingTimeStamp" || element == "$.InvalidData") {
+                            missing = false;
+                        }
+
+                        //box einfuegen!
+                    })
+                    return missing;
+                }),
             svg,
             g,
             layers = {},
@@ -25,33 +36,19 @@ define(['d3'], function (d3) {
             max,
             maxValue,
             minValue,
-            qualityIndicator,
+            qualityIndicator = "$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp",
             definedLine,
-            missingTimeStamps = [],
             useCoalitionLabels = true,
             cutoff = 50,
-            interpolation = "linear";
+            interpolation = "linear",
+            missingTimeStamps,
+            invalidValues,
+            missingValues;
 
 
         /*  LAYERS  */
 
         layers.graph = function(){
-
-
-            line.defined(function(d){
-                var missing = true;
-                d.affectingIndicators.forEach(function (element, index, array) {
-                    if (element == "$.MissingData" || element == "MissingTimeStamp" || element == "$.InvalidData") {
-                        missing = false;
-                    }
-
-                    //box einfuegen!
-                })
-                return missing;
-            })
-
-
-
             // update x and y scales (i.e, domain + range)
             xScale
                 .domain(d3.extent(channels[0].values, xValue))
@@ -236,13 +233,8 @@ define(['d3'], function (d3) {
                 .y(function(d) { return yScale(d.column - d.confidence); })
 
             //display dots
-
-            console.log("elements");
-            console.log(missingDataValues.length);
-            console.log(missingDataValues);
-
             missingDataValues.forEach(function(channel, index, array) {
-                var missingDataDots = g.selectAll("circle.missingDataDot-"+channel.name)
+                var missingDataDots = missingValues.selectAll("circle.missingDataDot-"+channel.name)
                     .data(channel.values);
 
                 //add new ones
@@ -273,7 +265,7 @@ define(['d3'], function (d3) {
 
             });
 
-            var upperBoundaries = g.selectAll("path.upperBoundary")
+            var upperBoundaries = missingValues.selectAll("path.upperBoundary")
                 .data(channels)
 
             var u = upperBoundaries
@@ -289,7 +281,7 @@ define(['d3'], function (d3) {
                 })
                 .style("stroke-width", 2)
 
-            var lowerBoundaries = g.selectAll("path.lowerBoundary")
+            var lowerBoundaries = missingValues.selectAll("path.lowerBoundary")
                 .data(channels)
 
             var l = lowerBoundaries
@@ -361,7 +353,7 @@ define(['d3'], function (d3) {
 
 
                 //draw invaliv values
-                var invalidDataRect = g.selectAll("rect.invalidValueRect-"+channel.name)
+                var invalidDataRect = invalidValues.selectAll("rect.invalidValueRect-"+channel.name)
                     .data(channel.values);
 
                 //add new ones
@@ -420,8 +412,8 @@ define(['d3'], function (d3) {
             //only get first channel! because we only need to do this once, as a missing time stamp spans over all channels
             var channel = channels[0];
 
-
-            var mtMarker = g.selectAll(".mtMarker")
+            var mtMarker = missingTimeStamps
+                .selectAll(".mtMarker")
                 .data(channel.values.filter(function(d){
                     if(d.affectingIndicators.indexOf("MissingTimeStamp")>-1)
                         return d
@@ -506,7 +498,28 @@ define(['d3'], function (d3) {
                     .append("g")
                     .attr("id","detailViewCanvas")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                //add containers for data quality problems in detail
+                missingTimeStamps = g
+                    .append("g")
+                    .attr("id", "MissingTimeStamp")
+                    .classed("dataQualityIndicatorDetail",true)
+                    //.attr("layerFunction",layers.missingTimeStampMarker);
+
+                missingValues = g
+                    .append("g")
+                    .attr("id", "$.MissingData")
+                    .classed("dataQualityIndicatorDetail",true)
+                    //.attr("layerFunction", layers.missingValues);
+
+                invalidValues = g
+                    .append("g")
+                    .attr("id", "$.InvalidData")
+                    .classed("dataQualityIndicatorDetail",true)
+                    //.attr("layerFunction", layers.invalidValues);
+
                 layers.axes();
+
                 updateChannels(data);
 
                 svg
@@ -518,6 +531,26 @@ define(['d3'], function (d3) {
                     });
 
             });
+        }
+
+        function displayQualityIndicators(id){
+            switch(id){
+                case "$.InvalidData":
+                    layers.invalidValues();
+                    break;
+                case "$.MissingData":
+                    layers.missingValues();
+                    break;
+                case "MissingTimeStamp":
+                    layers.missingTimeStampMarker();
+                    break;
+                case "$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp":
+                    layers.invalidValues();
+                    layers.missingValues();
+                    layers.missingTimeStampMarker()
+                    break;
+
+            }
         }
 
         function overDetailView(d) {
@@ -565,9 +598,11 @@ define(['d3'], function (d3) {
                 callback(json);
                 layers.graph();
                 layers.labels();
-                layers.missingTimeStampMarker();
-                layers.missingValues();
-                layers.invalidValues();
+
+                console.log("qualityIndic")
+                console.log(qualityIndicator);
+                displayQualityIndicators(qualityIndicator);
+
             })
         }
 
@@ -712,39 +747,33 @@ define(['d3'], function (d3) {
                 });
             });
         }
-        chart.setQualityIndicator = function(value){
-            console.log("value set to " + value);
-
-            if(qualityIndicator!=value) {
-                //set current quality indicator
-                qualityIndicator=value;
-
+        chart.setQualityIndicator = function(_){
+                qualityIndicator = _;
                 //remove all unecessary layers here!
                 if (qualityIndicator=="$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp") {
 
+
                 } else {
-                    //remove all layers
-                    invalidDataRect.remove();
+
+                    //remove all except for the choosen one!
+                    d3.selectAll(".dataQualityIndicatorDetail").each(function(qualityIndicatorDetailLayer){
+                        var element =  d3.select(this);
+                        console.log(qualityIndicator);
+                        if(element.attr("id")!=qualityIndicator){
+                            //clean layer
+                            element.selectAll("*").remove();
+                        }else{
+                            console.log("display!"+element.attr("id"));
+                            if(element.selectAll("*").empty){ //if layer has been removed before - readd it
+                                displayQualityIndicators(element.attr("id"));
+                            }
+                        }
 
 
-                    //add class to rect so you can select all!
-                    //or select elements with "rect.invalidValueRect-" contained within the class
-                    //remove all element
+                    });
+
+                    //console.log(d3.selectAll(".dataQualityIndicatorDetail"));
                 }
-
-                //add respective data quality indicator
-                //layers. invalidValues
-
-
-                //.mtMarker
-                //layers. missingTimeStampMarker
-
-
-                //missingDataDot
-
-                //layers. missingValues
-            }
-
         }
 
         chart.definedLine = function(_){
