@@ -49,6 +49,7 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
 
     //******** DETAIL VIEW *****************************
     //**************************************************
+    //initially create one!
     var detailView;
     detailView = dv()
         .x(function (d) {
@@ -100,19 +101,5 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
         detailView.addColumn("w");
         detailView.addColumn("m1");
     });
-
-
-        //.definedLine(function (d) {
-        //    var missing = false;
-        //    d.affectedIndicators.forEach(function (element, index, array) {
-        //        if(element=="$.MissingData"){
-        //            missing = true;
-        //        }
-        //    })
-        //
-        //    return missing;
-        //})
-
-
 
 });
