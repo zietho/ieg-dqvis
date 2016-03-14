@@ -99,7 +99,7 @@ require(['d3','./app/qualityView','./app/detailView' ], function(d3,qv,dv) {
         });
 
         detailView.addColumn("w");
-        detailView.addColumn("m1");
+        //detailView.addColumn("m1");
     });
 
 });
