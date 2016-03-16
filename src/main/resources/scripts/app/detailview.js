@@ -19,6 +19,22 @@ define(['d3'], function (d3) {
                 .defined(definedLine),
             lineRight = d3.svg.line().x(X).y(YRight)
                 .defined(definedLine),
+            lineUpperBoundaryLeft = d3.svg.line()
+                .defined(definedFunctionForMissingValues)
+                .x(function(d) { return X(d); })
+                .y(function(d) {return yLeftScale(d.column + d.confidence); }),
+            lineLowerBoundaryLeft = d3.svg.line()
+                .defined(definedFunctionForMissingValues)
+                .x(function(d) { return X(d); })
+                .y(function(d) { return yLeftScale(d.column - d.confidence); }),
+            lineUpperBoundaryRight = d3.svg.line()
+                .defined(definedFunctionForMissingValues)
+                .x(function(d) { return X(d); })
+                .y(function(d) {return yRightScale(d.column + d.confidence); }),
+            lineLowerBoundaryRight = d3.svg.line()
+                .defined(definedFunctionForMissingValues)
+                .x(function(d) { return X(d); })
+                .y(function(d) { return yRightScale(d.column - d.confidence); }),
             svg,
             g,
             layers = {},
@@ -30,9 +46,9 @@ define(['d3'], function (d3) {
             rangeMin,
             rangeMax,
             qualityIndicator = "$.InvalidData&indicator=$.MissingData&indicator=MissingTimeStamp",
-            missingTimeStamps,
-            invalidValues,
-            missingValues;
+            gMissingTimeStamps,
+            gInvalidValues,
+            gMissingValues;
 
         /*  LAYERS  */
 
@@ -46,6 +62,9 @@ define(['d3'], function (d3) {
 
             //multiple mode
             if(channels.length>2) {
+
+                console.info("multiple mode!");
+
                 var yMin = getMinimumValidValue(),
                     yMax = getMaximumValidValue();
 
@@ -55,7 +74,12 @@ define(['d3'], function (d3) {
                         yMax + ((yMax - yMin) * 0.10)
                     ])
                     .range([height, 0]);
+
+                console.info(yLeftScale(40000));
             }else{ //dual mode
+
+                console.info("dual mode");
+
                 var yLeftMin = getMinimumValidValueOfChannel(channels[0]),
                     yLeftMax = getMaximumValidValueOfChannel(channels[0]),
                     yRightMin = getMinimumValidValueOfChannel(channels[1]),
@@ -67,12 +91,18 @@ define(['d3'], function (d3) {
                         yLeftMax + ((yLeftMax - yLeftMin) * 0.10)
                    ])
                     .range([height, 0]);
+
+                console.info(yLeftScale(40000));
+
                 yRightScale
                     .domain([
                         yRightMin - ((yRightMax - yRightMin) * 0.10),
                         yRightMax + ((yRightMax - yRightMin) * 0.10)
                     ])
                     .range([height, 0]);
+
+                console.log("max left: "+yLeftMax+" / min left: "+yLeftMin+" / max right: "+yRightMax+" / min right : "+yRightMin);
+
             }
 
             //update axes
@@ -256,21 +286,6 @@ define(['d3'], function (d3) {
          */
 
         layers.missingValues = function(){
-            var missingDataValues,
-                lineUpperBoundaryLeft,
-                lineLowerBoundaryLeft,
-                lineLowerBoundaryRight,
-                lineUpperBoundaryRight;
-
-            //remove dual componentes
-            if(channels.length>2){
-                //remove
-                d3.select(".lowerBoundaryRight").remove();
-                d3.select(".upperBoundaryRight").remove();
-            }
-
-            //deep clone object, because of pass by reference
-            missingDataValues = filterDataQualityValues(channels, "$.MissingData");
 
             //calculate confidence values for each missing value
             channels.forEach(function(channel){
@@ -280,78 +295,40 @@ define(['d3'], function (d3) {
                 });
             });
 
-            //define line functions for both the upper and lower confidence interval
-            lineUpperBoundaryLeft = d3.svg.line()
-                .defined(function(d){
-                    var missing = false;
-                    d.affectingIndicators.forEach(function (element, index, array) {
-                        if (element == "$.MissingData" || element == "MissingTimeStamp") {
-                            missing = true
-                        }
+            channels.forEach(function (channel, index, array) {
+                //display missing values dots
+                var missingDataValues = filterDataQualityValues(channel, "$.MissingData");
+
+                var missingDataDots = gMissingValues.selectAll("circle.missingDataDot-"+channel.name)
+                    .data(missingDataValues);
+
+                //add new ones
+                missingDataDots
+                    .enter()
+                    .append("circle")
+                    .classed("missingDataDot-"+channel.name, true)
+                    .attr("cx", function (d) {
+                        return X(d);
                     })
-                    return missing;
-                })
-                .x(function(d) { return X(d); })
-                .y(function(d) {return yLeftScale(d.column + d.confidence); })
-
-            lineLowerBoundaryLeft = d3.svg.line()
-                .defined(function(d){
-                    var missing = false;
-                    d.affectingIndicators.forEach(function (element, index, array) {
-                        if (element == "$.MissingData" || element == "MissingTimeStamp") {
-                            missing = true;
-                        }
+                    .attr("cy", scaleMissingDataValues)
+                    .attr("r", 2)
+                    .style("stroke", function (d) {
+                        return color(channel.name);
                     })
-                    return missing;
-                })
-                .x(function(d) { return X(d); })
-                .y(function(d) { return yLeftScale(d.column - d.confidence); })
 
-
-            lineUpperBoundaryRight = d3.svg.line()
-                .defined(function(d){
-                    var missing = false;
-                    d.affectingIndicators.forEach(function (element, index, array) {
-                        if (element == "$.MissingData" || element == "MissingTimeStamp") {
-                            missing = true
-                        }
+                d3.transition().selectAll("circle.missingDataDot-"+channel.name)
+                    .attr("cx", function (d) {
+                        return X(d);
                     })
-                    return missing;
-                })
-                .x(function(d) { return X(d); })
-                .y(function(d) {return yRightScale(d.column + d.confidence); })
+                    .attr("cy", scaleMissingDataValues);
 
-            lineLowerBoundaryRight = d3.svg.line()
-                .defined(function(d){
-                    var missing = false;
-                    d.affectingIndicators.forEach(function (element, index, array) {
-                        if (element == "$.MissingData" || element == "MissingTimeStamp") {
-                            missing = true;
-                        }
-                    })
-                    return missing;
-                })
-                .x(function(d) { return X(d); })
-                .y(function(d) { return yRightScale(d.column - d.confidence); })
+                missingDataDots.exit().remove();
+            })
 
+            //DISPLAY BOUNDARIES
 
-            //display dots
-            if(channels.length>2){
-                console.log("in multiple dots");
-                missingDataValues.forEach(function(channel, index, array) {
-                    displayMissingDataDots(channel, YLeft);
-                });
-            }else{
-                if(missingDataValues.length>=1) {
-                    displayMissingDataDots(missingDataValues[0], YLeft);
-                }
-                if(missingDataValues.length==2) {
-                    displayMissingDataDots(missingDataValues[1], YRight);
-                }
-            }
-
-            //are two anyways alreay scaled so in both cases the same!
-            var upperBoundaries = missingValues.selectAll("path.upperBoundary")
+            //UPPER
+            var upperBoundaries = gMissingValues.selectAll("path.upperBoundary")
                 .data(channels)
 
             var u = upperBoundaries
@@ -360,22 +337,23 @@ define(['d3'], function (d3) {
                 .style("stroke-dasharray", ("3, 3"))
                 .classed("upperBoundary", true)
                 .attr("d", function(d,i) {
-                    if (channels.length == 2 && i == 1) {
-                        return lineUpperBoundaryRight(d.values);
-                    }else{
-                        return lineUpperBoundaryLeft(d.values);
-                    }
+                    console.log(d.name);
+                    return scaleMissingDataUpperBoundary(d.values, i);
                 })
                 .style("stroke", function (d) {
                     return color(d.name);
                 })
                 .style("stroke-width", 2)
 
-            if(channels.length==2){
-                u.classed("upperBoundaryRight",true);
-            }
+            d3.transition().selectAll("path.upperBoundary")
+                .attr("d", function (d,i) {
+                    return scaleMissingDataUpperBoundary(d.values, i);
+                })
 
-            var lowerBoundaries = missingValues.selectAll("path.lowerBoundary")
+            upperBoundaries.exit().remove();
+
+            //LOWER
+            var lowerBoundaries = gMissingValues.selectAll("path.lowerBoundary")
                 .data(channels)
 
             var l = lowerBoundaries
@@ -384,144 +362,84 @@ define(['d3'], function (d3) {
                 .style("stroke-dasharray", ("3, 3")) // dashed confidence intervalls
                 .classed("lowerBoundary", true)
                 .attr("d", function(d, i){
-                    if (channels.length == 2 && i == 1) {
-                        return lineLowerBoundaryRight(d.values);
-                    }else{
-                        return lineLowerBoundaryLeft(d.values);
-                    }
+                    return scaleMissingDataLowerBoundary(d.values, i);
                 })
                 .style("stroke", function (d) {
                     return color(d.name);
                 })
                 .style("stroke-width", 2)
 
-            if(channels.length==2){
-                l.classed("lowerBoundaryRight",true);
-            }
-
             //on transition move paths
-            d3.transition().selectAll("path.upperBoundary")
-                .attr("d", function (d,i) {
-                    console.info("in move!")
-                    if (channels.length == 2 && i == 1) {
-                        return lineUpperBoundaryRight(d.values);
-                    }else{
-                        return lineUpperBoundaryLeft(d.values);
-                    }
-                })
-
             d3.transition().selectAll("path.lowerBoundary")
                 .attr("d", function (d,i) {
-                    if (channels.length == 2 && i == 1) {
-                        return lineLowerBoundaryRight(d.values);
-                    }else{
-                        return lineLowerBoundaryLeft(d.values);
-                    }
+                    return scaleMissingDataLowerBoundary(d.values, i);
                 })
 
             //on exit selection - remove paths
             lowerBoundaries.exit().remove();
-            upperBoundaries.exit().remove();
+
+
+
         }
 
-        layers.invalidValues = function(){
-            //1. retrieve all invalid values for later display.
-            var invalidValuesData = filterDataQualityValues(channels, "$.InvalidData");
 
-            //2. retrieve all valid values in order to calculate the local minium and maximum for each channel.
-            var validValues = JSON.parse(JSON.stringify(channels)).filter(function(d) {
-                d.values = d.values.filter(function (value) {
+        layers.invalidValues = function() {
+            var invalidDataRect;
+
+            //remove old ones
+            gInvalidValues.selectAll("*").remove();
+
+            channels.forEach(function (channel, index, array){
+                //calculate local max and minimum
+                var validValues = channel.values.filter(function (value) {
                     //only return the value if the array with affecting Indicators is either undefined or empty.
-                    if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0){
+                    if (typeof value.affectingIndicators === 'undefined' || value.affectingIndicators.length === 0) {
                         return value
                     }
                 });
 
                 //calculate the local minimum and maximum value for all valid values of the the respective channel
                 //note: only available within the valid values
-                d.max =  d3.max(d.values, yValue)
-                d.min = d3.min(d.values, yValue)
+                channel.max = d3.max(validValues, yValue)
+                channel.min = d3.min(validValues, yValue)
 
-                if(d.values.length>0)
-                    return d;
-            });
-
-
-
-
-            //update line path
-            invalidValuesData.forEach(function(channel, index, array) {
-                //for each channel retrieve the calculated local minimum rangeMin and rangeMax.
-                var channelMax, channelMin;
-
-                //because the local rangeMin and rangeMax is only available for the valid data, it is saved there
-                validValues.forEach(function(c, index, array){
-                    if(channel.name==c.name){
-                        channelMax = c.max;
-                        channelMin = c.min;
-                    }
-                });
-
+                var invalidDataValues = filterDataQualityValues(channel, "$.InvalidData");
 
                 //draw invaliv values
-                var invalidDataRect = invalidValues.selectAll("rect.invalidValueRect-"+channel.name)
-                    .data(channel.values);
+                invalidDataRect = gInvalidValues.selectAll("rect.invalidValueRect-" + channel.name)
+                    .data(invalidDataValues);
 
                 //add new ones
                 invalidDataRect
                     .enter()
                     .append("rect")
-                    .classed("invalidValueRect-"+channel.name, true)
+
+                    .classed("invalidValueRect-" + channel.name, true)
                     .attr("x", function (d) {
                         return X(d);
                     })
                     .attr("y", function (d) {
-                        var distanceToMax = Math.abs(channelMax - YLeft(d));
-                        var distanceToMin = Math.abs(channelMin - YLeft(d));
-
-                        if(distanceToMax<=distanceToMin){
-                            if(array.length==2 && index==1 || array.length==1 && channel.name == channels[1].name){
-                                return yRightScale(channelMax);
-                            }else{
-                                return yLeftScale(channelMan);
-                            }
-                        }else{
-                            if(array.length==2 && index==1 || array.length==1 && channel.name == channels[1].name){
-                                console.log("right scaled");
-                                return yRightScale(channelMin)
-                            }else{
-                                return yLeftScale(channelMin);
-                            }
-                        }
-
+                        return scaleInvalidDataValue(channel, index, d);
                     })
                     .attr("width", 3)
-                    .attr("height",3)
+                    .attr("height", 3)
                     .style("fill", function (d) {
                         return color(channel.name);
                         return "black";
                     })
 
-                d3.transition().selectAll("rect.invalidValueRect-"+channel.name)
+                //transition
+                d3.transition().selectAll("rect.invalidValueRect-" + channel.name)
                     .attr("x", function (d) {
                         return X(d);
                     })
                     .attr("y", function (d) {
-                        var distanceToMax = Math.abs(channelMax - YLeft(d));
-                        var distanceToMin = Math.abs(channelMin - YLeft(d));
-
-
-                        if(distanceToMax<=distanceToMin){
-                            return yLeftScale(channelMax);
-                        }else{
-                            return yLeftScale(channelMin);
-                        }
+                        return scaleInvalidDataValue(channel, index, d);
                     })
 
+                //remove old ones
                 invalidDataRect.exit().remove();
-
             });
-
 
 
         }
@@ -531,7 +449,7 @@ define(['d3'], function (d3) {
             //only get first channel! because we only need to do this once, as a missing time stamp spans over all channels
             var channel = channels[0];
 
-            var mtMarker = missingTimeStamps
+            var mtMarker = gMissingTimeStamps
                 .selectAll(".mtMarker")
                 .data(channel.values.filter(function(d){
                     if(d.affectingIndicators.indexOf("MissingTimeStamp")>-1)
@@ -562,37 +480,72 @@ define(['d3'], function (d3) {
             Helper functions
          */
 
-        function displayMissingDataDots(channel, scaleFunction){
-            console.log(channel);
-            var missingDataDots = missingValues.selectAll("circle.missingDataDot-"+channel.name)
-                .data(channel.values);
-
-            //add new ones
-            missingDataDots
-                .enter()
-                .append("circle")
-                .classed("missingDataDot-"+channel.name, true)
-                .attr("cx", function (d) {
-                    return X(d);
-                })
-                .attr("cy", function (d) {
-                    return scaleFunction(d)
-                })
-                .attr("r", 2)
-                .style("stroke", function (d) {
-                    return color(channel.name);
-                })
-
-            d3.transition().selectAll("circle.missingDataDot-"+channel.name)
-                .attr("cx", function (d) {
-                    return X(d);
-                })
-                .attr("cy", function (d) {
-                    return scaleFunction(d)
-                })
-
-            missingDataDots.exit().remove();
+        function definedFunctionForMissingValues(d){
+            var missing = false;
+            d.affectingIndicators.forEach(function (element, index, array) {
+                if (element == "$.MissingData" || element == "MissingTimeStamp") {
+                    missing = true;
+                }
+            })
+            return missing;
         }
+
+        function scaleMissingDataUpperBoundary(value, index){
+            return (index==0 || index>=2) ? lineUpperBoundaryLeft(value) : lineUpperBoundaryRight(value);
+        }
+
+        function scaleMissingDataLowerBoundary(value, index){
+            return (index==0 || index>=2) ? lineLowerBoundaryLeft(value) : lineLowerBoundaryRight(value);
+        }
+
+
+        function scaleMissingDataValues(value, index){
+            return (index==0 || index>=2) ? YLeft(value) : YRight (value);
+        }
+
+        function scaleInvalidDataValue(channel, index, value){
+            //first decide which scaleFunction
+            var distanceToMin = (index==0 || index>=2) ? Math.abs(channel.max - YLeft(value)) : Math.abs(channel.max - YRight(value));
+            var distanceToMax = (index==0 || index>=2) ? Math.abs(channel.min - YLeft(value)) : Math.abs(channel.min - YRight(value));
+
+            if(distanceToMax<=distanceToMin){
+                return (index==0 || index>=2) ? yLeftScale(channel.max) : yRightScale(channel.max);
+            }else{
+                return (index==0 || index>=2) ? yLeftScale(channel.min) : yRightScale(channel.min);
+            }
+        }
+
+        //function displayMissingDataDots(channel, scaleFunction){
+        //    console.log(channel);
+        //    var missingDataDots = gMissingValues.selectAll("circle.missingDataDot-"+channel.name)
+        //        .data(channel.values);
+        //
+        //    //add new ones
+        //    missingDataDots
+        //        .enter()
+        //        .append("circle")
+        //        .classed("missingDataDot-"+channel.name, true)
+        //        .attr("cx", function (d) {
+        //            return X(d);
+        //        })
+        //        .attr("cy", function (d) {
+        //            return scaleFunction(d)
+        //        })
+        //        .attr("r", 2)
+        //        .style("stroke", function (d) {
+        //            return color(channel.name);
+        //        })
+        //
+        //    d3.transition().selectAll("circle.missingDataDot-"+channel.name)
+        //        .attr("cx", function (d) {
+        //            return X(d);
+        //        })
+        //        .attr("cy", function (d) {
+        //            return scaleFunction(d)
+        //        })
+        //
+        //    missingDataDots.exit().remove();
+        //}
 
         function definedLine(d){
             var definded = true;
@@ -704,23 +657,23 @@ define(['d3'], function (d3) {
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
                 //add containers for data quality problems in detail
-                missingTimeStamps = g
+                gMissingTimeStamps = g
                     .append("g")
                     .attr("id", "MissingTimeStamp")
                     .classed("dataQualityIndicatorDetail",true)
                     //.attr("layerFunction",layers.missingTimeStampMarker);
 
-                missingValues = g
+                gMissingValues = g
                     .append("g")
                     .attr("id", "$.MissingData")
                     .classed("dataQualityIndicatorDetail",true)
-                    //.attr("layerFunction", layers.missingValues);
+                    //.attr("layerFunction", layers.gMissingValues);
 
-                invalidValues = g
+                gInvalidValues = g
                     .append("g")
                     .attr("id", "$.InvalidData")
                     .classed("dataQualityIndicatorDetail",true)
-                    //.attr("layerFunction", layers.invalidValues);
+                    //.attr("layerFunction", layers.gInvalidValues);
 
                 layers.axes();
 
@@ -835,17 +788,13 @@ define(['d3'], function (d3) {
         };
 
         function filterDataQualityValues(channel, qualityProblem ){
-            //deep clone object, because of pass by reference
-            return JSON.parse(JSON.stringify(channels)).filter(function(d) {
-                d.values = d.values.filter(function (value) {
-                    if (value.affectingIndicators.indexOf(qualityProblem) > -1){
-                        return value
+            return channel.values.filter(function(d){
+                if (typeof d.affectingIndicators !== 'undefined' || d.affectingIndicators.length > 0){
+                    if (d.affectingIndicators.indexOf(qualityProblem) > -1) {
+                        return d;
                     }
-                });
-
-                if(d.values.length>0)
-                    return d;
-            });
+                }
+            })
         }
 
         /*
