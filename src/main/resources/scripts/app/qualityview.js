@@ -8,6 +8,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             width = 960 - margin.left - margin.right,
             height = 100 - margin.top - margin.bottom,
             svg,
+            ulIndicators,
             g,
             serverUrl,
             layers={},
@@ -64,7 +65,32 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             return qualityStripes;
         }
 
+        layers.qualityIndicators = function (){
+            var list = ulIndicators
+                .style("width", width);
+
+            console.log("indicators:");
+            console.log(indicators);
+
+            list
+                .selectAll("li")
+                .data(indicators)
+                .enter()
+                .append("li")
+                .classed("qualityIndicator", true)
+                .style("background", function(d,i){
+                    var palette = colorScale(i);
+                    return palette[1];
+                })
+                .style("width", (width-margin.left)/4+"px")
+                .append("a")
+                .text(function(d){
+                    return d.text;
+                })
+        }
+
         layers.qualityIndicator = function(){
+
             var select = d3.select(svg.node().parentNode)
                 .append("select")
                 .attr("id", "qualityIndicatorSelect");
@@ -148,15 +174,21 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .scale(d3.scale.linear().domain([0, 100]).rangeRound([0, width-margin.right]))
                 .on("slide", function(evt, value) {
                     sliderCallBack(evt, value);
-                    console.log(value);
                 });
-
-            console.log("slider width: "+width);
 
             d3.select("#allQualityStripe").call(timeSlider);
         }
 
         function chart(selection) {
+            ulIndicators = selection.append("ul")
+                .attr("width", (width-margin.left)-margin.right)
+                .attr("height", height)
+                .attr("id", "qualityIndicators")
+                .style("margin-left", margin.left)
+
+            console.log("WIDTH");
+            console.log(margin.left);
+
             //add new svg
             svg = selection.append("svg");
             svg.attr("width", width)
@@ -164,6 +196,7 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                 .attr("id", "qualityView");
 
             //add layers
+            layers.qualityIndicators();
             layers.axes();
             layers.toggle();
             layers.addSign();
@@ -172,14 +205,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
             layers.qualityIndicator();
             layers.timeSlider();
 
-
-            console.log("margin top: "+margin.top);
-            console.log("width of quality Stripe: "+width);
-            console.log(d3.selectAll("#allQualityStripe"));
-            // update x and y scales (i.e, domain + range)
-            //xScale
-            //    .domain(d3.extent(data.values, xValue))
-            //    .range([0,width]);
         }
 
         // INTERACTION
@@ -349,7 +374,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
                     .domain(d3.extent(column.values, xValue))
                     .range([0,width-margin.right]);
 
-                console.log(column);
                 //update axes
                 d3.select(".time.axis").call(xAxis);
             }
@@ -404,7 +428,6 @@ define(['d3','jquery','./qualityStripe', './qualitySlider', 'colorbrewer'], func
         }
 
         chart.getColourPaletteOfIndicator = function(indicator){
-
             var palette = [];
 
             indicators.forEach(function(element,index,array){

@@ -128,7 +128,7 @@
     }
 
     .dragging {
-        fill: red;
+        /*fill: red;*/
         stroke: brown;
     }
 
@@ -167,11 +167,51 @@
     }
 
 
+    li.qualityIndicator{
+        float: left;
+        display: block;
+        padding:5px 0 5px 0;
+    }
+
+    li.qualityIndicator a{
+        display:block; 
+        margin: auto;
+        text-align: center;
+    }
+
+    div#detailViewPlaceholder{
+        width:890px;
+        height:75px;
+        text-align: center;
+        font: 2em sans-serif;
+        box-shadow: 0px 2px 7px #999999;
+        vertical-align: middle;
+        line-height: 75px;
+        color: #CCCCCC;
+
+    }
+
+    div#detailViewPlaceholder em{
+        font-size:2em;
+        font-weight: bold;
+        font-style: normal;
+        color:#AAAAAA;
+    }
+
+    div#visualization{
+        overflow: auto;
+
+    }
+
 </style>
 <body>
 <h1>Data Quality Visualization</h1>
 <h2>powered by <a href="http://d3js.org/">d3.js</a>, <a href="https://dropwizard.github.io/dropwizard/">Dropwizzard</a> and <a href="https://github.com/ieg-vienna/TimeBench">TimeBench</a></h2>
-<div id="visualization"/>
+<div id="visualization"></div>
+<div id="detailViewPlaceholder">
+    <em>+</em> drag a channel here to add another detail view
+</div>
+
 
 <script data-main="app" src="scripts/lib/require.js"></script>
 

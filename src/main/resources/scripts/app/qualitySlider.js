@@ -20,8 +20,7 @@ define(['d3','jquery'], function (d3, jQuery) {
             p2;
 
         // Private variables
-        var axisScale,
-            dispatch = d3.dispatch("slide"),
+        var dispatch = d3.dispatch("slide"),
             handle1,
             handle2 = null,
             range,
@@ -112,7 +111,6 @@ define(['d3','jquery'], function (d3, jQuery) {
                             x = parseInt(t.translate[0]);
                         }
 
-                        console.log("x is "+x);
                         xDiff = d3.event.x - x;
                     }
 
@@ -132,9 +130,7 @@ define(['d3','jquery'], function (d3, jQuery) {
                     }else{
                         var rangeWidth = parseInt(d3.select(this).attr("width"));
                         ///@TODO improve border values
-                        //console.log("xdiff:"+xDiff);
-                        //console.log("pos:"+pos);
-                        //console.log(sliderLength);
+
                         if(pos-handleWidth>=0 && (pos+rangeWidth)<= sliderLength) {
                             moveRange(pos);
                         }
@@ -199,8 +195,6 @@ define(['d3','jquery'], function (d3, jQuery) {
                 currentXH2 += movedBy;
                 value[0] = scale.invert(currentXH1);
                 value[1] = scale.invert(currentXH2);
-
-
                 handle1.attr("x", parseInt(scale(value[0])));
                 handle2.attr("x", parseInt(scale(value[1])));
                 p1.attr("transform", "translate("+(parseInt(scale(value[0]))-5)+",-15)")
@@ -258,7 +252,6 @@ define(['d3','jquery'], function (d3, jQuery) {
             if (value) {
                 moveHandle(stepValue(_));
             }
-            ;
             value = _;
             return slider;
         };

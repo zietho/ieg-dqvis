@@ -68,6 +68,15 @@ define(['d3','colorbrewer'], function (d3, colorbrewer) {
             ticks
                 .attr("fill", function (d) {
                     var color = d3.rgb(colorScale(1-d.quality));
+                    if(columnName!="all"){
+
+                        var colorHSL =  color.hsl();
+                        colorHSL.s = colorHSL.s*0.5;
+                        color = colorHSL.rgb();
+
+
+
+                    }
                     return "rgb("+color.r+","+color.g+","+color.b+")";
                 });
             //exit selection

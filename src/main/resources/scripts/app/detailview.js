@@ -2,8 +2,10 @@
 define(['d3'], function (d3) {
 
     function detailView() {
-
+        //initialize variables
         var margin = {top: 20, right: 80, bottom: 80, left: 50},
+            id,
+            prefix,
             width,
             height,
             xValue,
@@ -50,21 +52,16 @@ define(['d3'], function (d3) {
             gInvalidValues,
             gMissingValues;
 
-        /*  LAYERS  */
 
+        /*  LAYERS  */
         layers.graph = function(){
             // update x and y scales (i.e, domain + range)
             xScale
                 .domain(d3.extent(channels[0].values, xValue))
                 .range([0,width]);
 
-            console.info("number of channels: "+channels.length);
-
             //multiple mode
             if(channels.length>2) {
-
-                console.info("multiple mode!");
-
                 var yMin = getMinimumValidValue(),
                     yMax = getMaximumValidValue();
 
@@ -74,16 +71,11 @@ define(['d3'], function (d3) {
                         yMax + ((yMax - yMin) * 0.10)
                     ])
                     .range([height, 0]);
-
-                console.info(yLeftScale(40000));
             }else{ //dual mode
-
-                console.info("dual mode");
-
                 var yLeftMin = getMinimumValidValueOfChannel(channels[0]),
                     yLeftMax = getMaximumValidValueOfChannel(channels[0]),
-                    yRightMin = getMinimumValidValueOfChannel(channels[1]),
-                    yRightMax = getMaximumValidValueOfChannel(channels[1]);
+                    yRightMin = (channels.length==2) ? getMinimumValidValueOfChannel(channels[1]) : null,
+                    yRightMax = (channels.length==2) ? getMaximumValidValueOfChannel(channels[1]) : null;
 
                 yLeftScale
                     .domain([
@@ -92,46 +84,42 @@ define(['d3'], function (d3) {
                    ])
                     .range([height, 0]);
 
-                console.info(yLeftScale(40000));
-
-                yRightScale
-                    .domain([
-                        yRightMin - ((yRightMax - yRightMin) * 0.10),
-                        yRightMax + ((yRightMax - yRightMin) * 0.10)
-                    ])
-                    .range([height, 0]);
-
-                console.log("max left: "+yLeftMax+" / min left: "+yLeftMin+" / max right: "+yRightMax+" / min right : "+yRightMin);
-
+                if(channels.length==2) {
+                    yRightScale
+                        .domain([
+                            yRightMin - ((yRightMax - yRightMin) * 0.10),
+                            yRightMax + ((yRightMax - yRightMin) * 0.10)
+                        ])
+                        .range([height, 0]);
+                }
             }
 
             //update axes
-            d3.select(".x.axis").call(xAxis);
-            d3.select("#yAxisLeft").call(yAxisLeft);
+            d3.select("#"+prefix+"xAxis").call(xAxis);
+            d3.select("#"+prefix+"yAxisLeft").call(yAxisLeft);
             if(channels.length==2) {
-                d3.select("#yAxisRight").call(yAxisRight);
+                d3.select("#"+prefix+"yAxisRight").call(yAxisRight);
             }
 
             //update line path
-            var paths = g.selectAll("path.line")
+            var paths = g.selectAll("path."+prefix+"line")
                 .data(channels);
 
             if(channels.length>2) {
 
                 //if dual remove
-                if(!d3.select(".leftLine").empty() && !d3.select(".rightLine").empty()) {
-                    d3.select(".leftLine").remove();
-                    d3.select(".rightLine").remove();
+                if(!d3.select("."+prefix+"leftLine").empty() && !d3.select(".rightLine").empty()) {
+                    d3.select("."+prefix+"leftLine").remove();
+                    d3.select("."+prefix+"rightLine").remove();
                 }
                 //add new ones
                 var pathsEnter = paths
                     .enter()
                     .append("path")
-                    .classed("line", true)
+                    .classed(prefix+"line", true)
                     .attr("id", function (d) {
                         return d.name;
                     })
-                    //.transition()
                     .attr("d", function (d) {
                         return lineLeft(d.values);
                     })
@@ -141,10 +129,9 @@ define(['d3'], function (d3) {
                     .style("stroke-width", 2)
                     .on("click", function (d) {
                         var selectedPath = d3.select(this);
-
                         //remove all old remove buttons and
-                        d3.select("#detailViewCanvas").selectAll(".removeButton").remove();
-                        d3.selectAll(".line").transition().style("stroke-width", 2)
+                        d3.select("#"+prefix+"canvas").selectAll(".removeButton").remove();
+                        d3.selectAll("."+prefix+"line").transition().style("stroke-width", 2)
 
                         if (selectedPath.style("stroke-width") === "2px") {
                             selectedPath.transition().style("stroke-width", 4);
@@ -154,23 +141,16 @@ define(['d3'], function (d3) {
                         }
                     })
 
-                d3.transition().selectAll("path.line")
+                d3.transition().selectAll("path."+prefix+"line")
                     .attr("d", function (d) {
                         return lineLeft(d.values);
                     })
 
                 paths.exit().remove();
-
-
-
             }else{
-
-                if(d3.select(".leftLine").empty() && d3.select(".rightLine").empty()) {
-
-                    console.info("create paths");
-
+                if(d3.select("."+prefix+"leftLine").empty() && d3.select("."+prefix+"rightLine").empty()) {
                     g.append("path")
-                        .classed("leftLine", true)
+                        .classed(prefix+"leftLine", true)
                         .attr("id", channels[0].name)
                         //.transition()
                         .attr("d", lineLeft(channels[0].values))
@@ -180,8 +160,8 @@ define(['d3'], function (d3) {
                             var selectedPath = d3.select(this);
 
                             //remove all old remove buttons and
-                            d3.select("#detailViewCanvas").selectAll(".removeButton").remove();
-                            d3.selectAll(".line").transition().style("stroke-width", 2)
+                            d3.select("#"+prefix+"canvas").selectAll("."+prefix+"removeButton").remove();
+                            d3.selectAll("."+prefix+"line").transition().style("stroke-width", 2)
 
                             if (selectedPath.style("stroke-width") === "2px") {
                                 selectedPath.transition().style("stroke-width", 4);
@@ -191,46 +171,51 @@ define(['d3'], function (d3) {
                             }
                         })
 
-                    g.append("path")
-                        .classed("rightLine", true)
-                        .attr("id", channels[1].name)
-                        //.transition()
-                        .attr("d", lineRight(channels[1].values))
-                        .style("stroke", color(channels[1].name))
-                        .style("stroke-width", 2)
-                        .on("click", function (d) {
-                            var selectedPath = d3.select(this);
+                    if(channels.length==2) {
+                        g.append("path")
+                            .classed(prefix + "rightLine", true)
+                            .attr("id", channels[1].name)
+                            //.transition()
+                            .attr("d", lineRight(channels[1].values))
+                            .style("stroke", color(channels[1].name))
+                            .style("stroke-width", 2)
+                            .on("click", function (d) {
+                                var selectedPath = d3.select(this);
 
-                            //remove all old remove buttons and
-                            d3.select("#detailViewCanvas").selectAll(".removeButton").remove();
-                            d3.selectAll(".line").transition().style("stroke-width", 2)
+                                //remove all old remove buttons and
+                                d3.select("#" + prefix + "canvas").selectAll("." + prefix + "removeButton").remove();
+                                d3.selectAll(".line").transition().style("stroke-width", 2)
 
-                            if (selectedPath.style("stroke-width") === "2px") {
-                                selectedPath.transition().style("stroke-width", 4);
-                                addRemoveButton(selectedPath);
-                            } else {
-                                selectedPath.transition().style("stroke-width", 2);
-                            }
-                        })
-                }else{
+                                if (selectedPath.style("stroke-width") === "2px") {
+                                    selectedPath.transition().style("stroke-width", 4);
+                                    addRemoveButton(selectedPath);
+                                } else {
+                                    selectedPath.transition().style("stroke-width", 2);
+                                }
+                            })
+                    }
+                }
+                else{
                     //update
-                    d3.transition().select("path.leftLine")
+                    d3.transition().select("path."+prefix+"leftLine")
                         .attr("d", lineLeft(channels[0].values));
 
-                    d3.transition().select("path.rightLine")
-                        .attr("d", lineRight(channels[1].values));
+                    if(channels.length==2) {
+                        d3.transition().select("path." + prefix + "rightLine")
+                            .attr("d", lineRight(channels[1].values));
+                    }
                 }
             }
         }
 
         layers.labels = function(){
-            var labels = g.selectAll("text.label")
+            var labels = g.selectAll("text."+prefix+"label")
                 .data(channels)
 
             var labelsEnter = labels
                 .enter()
                 .append("text")
-                .classed("label", true)
+                .classed(prefix+"label", true)
                 .attr("transform", function(d){
                     return "translate(" + (width+3) + "," + YLeft(d.values[d.values.length-1]) + ")"
                 })
@@ -243,7 +228,7 @@ define(['d3'], function (d3) {
                     return d.name;
                 });
 
-            d3.transition().selectAll("text.label")
+            d3.transition().selectAll("text."+prefix+"label")
                 .attr("transform", function(d){
                     return "translate(" + (width+3) + "," + YLeft(d.values[d.values.length-1]) + ")"
                 })
@@ -252,16 +237,16 @@ define(['d3'], function (d3) {
         }
 
         layers.axes = function(){
-
             //x-axis
             g.append("g")
                 .attr("class", "x axis")
+                .attr("id", prefix+"xAxis")
                 .attr("transform", "translate(0," + height + ")");
 
             //y-axis depending on the mode
                 g.append("g")
                     .attr("class", "y axis")
-                    .attr("id", "yAxisLeft")
+                    .attr("id", prefix+"yAxisLeft")
                     .append("text")
                     .attr("transform", "rotate(-90)")
                     .attr("y", 6)
@@ -271,7 +256,7 @@ define(['d3'], function (d3) {
 
                 g.append("g")
                     .attr("class", "y axis")
-                    .attr("id", "yAxisRight")
+                    .attr("id", prefix+"yAxisRight")
                     .attr("transform", "translate(" + (width) + " ,0)") //shift
                     .append("text")
                     .attr("transform", "rotate(-90)")
@@ -286,7 +271,6 @@ define(['d3'], function (d3) {
          */
 
         layers.missingValues = function(){
-
             //calculate confidence values for each missing value
             channels.forEach(function(channel){
                 var n = channel.values.length;
@@ -306,7 +290,7 @@ define(['d3'], function (d3) {
                 missingDataDots
                     .enter()
                     .append("circle")
-                    .classed("missingDataDot-"+channel.name, true)
+                    .classed(prefix+"missingDataDot-"+channel.name, true)
                     .attr("cx", function (d) {
                         return X(d);
                     })
@@ -316,7 +300,7 @@ define(['d3'], function (d3) {
                         return color(channel.name);
                     })
 
-                d3.transition().selectAll("circle.missingDataDot-"+channel.name)
+                d3.transition().selectAll("circle."+prefix+"missingDataDot-"+channel.name)
                     .attr("cx", function (d) {
                         return X(d);
                     })
@@ -328,16 +312,15 @@ define(['d3'], function (d3) {
             //DISPLAY BOUNDARIES
 
             //UPPER
-            var upperBoundaries = gMissingValues.selectAll("path.upperBoundary")
+            var upperBoundaries = gMissingValues.selectAll("path."+prefix+"upperBoundary")
                 .data(channels)
 
             var u = upperBoundaries
                 .enter()
                 .append("path")
                 .style("stroke-dasharray", ("3, 3"))
-                .classed("upperBoundary", true)
+                .classed(prefix+"upperBoundary", true)
                 .attr("d", function(d,i) {
-                    console.log(d.name);
                     return scaleMissingDataUpperBoundary(d.values, i);
                 })
                 .style("stroke", function (d) {
@@ -345,7 +328,7 @@ define(['d3'], function (d3) {
                 })
                 .style("stroke-width", 2)
 
-            d3.transition().selectAll("path.upperBoundary")
+            d3.transition().selectAll("path."+prefix+"upperBoundary")
                 .attr("d", function (d,i) {
                     return scaleMissingDataUpperBoundary(d.values, i);
                 })
@@ -353,14 +336,14 @@ define(['d3'], function (d3) {
             upperBoundaries.exit().remove();
 
             //LOWER
-            var lowerBoundaries = gMissingValues.selectAll("path.lowerBoundary")
+            var lowerBoundaries = gMissingValues.selectAll("path."+prefix+"lowerBoundary")
                 .data(channels)
 
             var l = lowerBoundaries
                 .enter()
                 .append("path")
                 .style("stroke-dasharray", ("3, 3")) // dashed confidence intervalls
-                .classed("lowerBoundary", true)
+                .classed(prefix+"lowerBoundary", true)
                 .attr("d", function(d, i){
                     return scaleMissingDataLowerBoundary(d.values, i);
                 })
@@ -370,7 +353,7 @@ define(['d3'], function (d3) {
                 .style("stroke-width", 2)
 
             //on transition move paths
-            d3.transition().selectAll("path.lowerBoundary")
+            d3.transition().selectAll("path."+prefix+"lowerBoundary")
                 .attr("d", function (d,i) {
                     return scaleMissingDataLowerBoundary(d.values, i);
                 })
@@ -378,10 +361,7 @@ define(['d3'], function (d3) {
             //on exit selection - remove paths
             lowerBoundaries.exit().remove();
 
-
-
         }
-
 
         layers.invalidValues = function() {
             var invalidDataRect;
@@ -406,7 +386,7 @@ define(['d3'], function (d3) {
                 var invalidDataValues = filterDataQualityValues(channel, "$.InvalidData");
 
                 //draw invaliv values
-                invalidDataRect = gInvalidValues.selectAll("rect.invalidValueRect-" + channel.name)
+                invalidDataRect = gInvalidValues.selectAll("rect."+prefix+"invalidValueRect-" + channel.name)
                     .data(invalidDataValues);
 
                 //add new ones
@@ -414,7 +394,7 @@ define(['d3'], function (d3) {
                     .enter()
                     .append("rect")
 
-                    .classed("invalidValueRect-" + channel.name, true)
+                    .classed(prefix+"invalidValueRect-" + channel.name, true)
                     .attr("x", function (d) {
                         return X(d);
                     })
@@ -429,7 +409,7 @@ define(['d3'], function (d3) {
                     })
 
                 //transition
-                d3.transition().selectAll("rect.invalidValueRect-" + channel.name)
+                d3.transition().selectAll("rect."+prefix+"invalidValueRect-" + channel.name)
                     .attr("x", function (d) {
                         return X(d);
                     })
@@ -450,7 +430,7 @@ define(['d3'], function (d3) {
             var channel = channels[0];
 
             var mtMarker = gMissingTimeStamps
-                .selectAll(".mtMarker")
+                .selectAll("."+prefix+"missingTimeStamp")
                 .data(channel.values.filter(function(d){
                     if(d.affectingIndicators.indexOf("MissingTimeStamp")>-1)
                         return d
@@ -459,7 +439,7 @@ define(['d3'], function (d3) {
             mtMarker
                 .enter()
                 .append("text")
-                .classed("mtMarker", true)
+                .classed(prefix+"missingTimeStamp", true)
                 .attr("x", function(d){
                     return X(d);
                 })
@@ -468,7 +448,7 @@ define(['d3'], function (d3) {
                 .style("stroke-width",10)
                 .text("X");
 
-            d3.transition().selectAll(".mtMarker")
+            d3.transition().selectAll("."+prefix+"missingTimeStamp")
                 .attr("x", function(d){
                     return X(d);
                 })
@@ -477,8 +457,53 @@ define(['d3'], function (d3) {
         }
 
         /*
-            Helper functions
+            UTILITY/HELPER FUNCTIONs
          */
+
+        function chart(selection) {
+            selection.each(function (data) {
+                //first update Channels
+                updateChannels(data);
+
+                // Select the svg element, if it exists.
+                svg = d3.select(this)
+                    .append("svg")
+                    .attr("id", "detailView-"+id)
+                    .attr("width", width+margin.right)
+                    .attr("height", height+margin.bottom);
+
+                //update inner dimensions
+                g = svg
+                    .append("g")
+                    .attr("id",prefix+"canvas")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                //add containers for data quality problems in detail
+                gMissingTimeStamps = g
+                    .append("g")
+                    .attr("id", "MissingTimeStamp")
+                    .classed(prefix+"dataQualityIndicatorDetail",true)
+
+                gMissingValues = g
+                    .append("g")
+                    .attr("id", "$.MissingData")
+                    .classed(prefix+"dataQualityIndicatorDetail",true)
+
+                gInvalidValues = g
+                    .append("g")
+                    .attr("id", "$.InvalidData")
+                    .classed(prefix+"dataQualityIndicatorDetail",true)
+
+                //axes
+                layers.axes();
+
+                displayQualityIndicators(qualityIndicator)
+
+                svg
+                    .on("mouseover", overDetailView)
+                    .on("mouseup", outDetailView);
+            });
+        }
 
         function definedFunctionForMissingValues(d){
             var missing = false;
@@ -498,7 +523,6 @@ define(['d3'], function (d3) {
             return (index==0 || index>=2) ? lineLowerBoundaryLeft(value) : lineLowerBoundaryRight(value);
         }
 
-
         function scaleMissingDataValues(value, index){
             return (index==0 || index>=2) ? YLeft(value) : YRight (value);
         }
@@ -514,38 +538,6 @@ define(['d3'], function (d3) {
                 return (index==0 || index>=2) ? yLeftScale(channel.min) : yRightScale(channel.min);
             }
         }
-
-        //function displayMissingDataDots(channel, scaleFunction){
-        //    console.log(channel);
-        //    var missingDataDots = gMissingValues.selectAll("circle.missingDataDot-"+channel.name)
-        //        .data(channel.values);
-        //
-        //    //add new ones
-        //    missingDataDots
-        //        .enter()
-        //        .append("circle")
-        //        .classed("missingDataDot-"+channel.name, true)
-        //        .attr("cx", function (d) {
-        //            return X(d);
-        //        })
-        //        .attr("cy", function (d) {
-        //            return scaleFunction(d)
-        //        })
-        //        .attr("r", 2)
-        //        .style("stroke", function (d) {
-        //            return color(channel.name);
-        //        })
-        //
-        //    d3.transition().selectAll("circle.missingDataDot-"+channel.name)
-        //        .attr("cx", function (d) {
-        //            return X(d);
-        //        })
-        //        .attr("cy", function (d) {
-        //            return scaleFunction(d)
-        //        })
-        //
-        //    missingDataDots.exit().remove();
-        //}
 
         function definedLine(d){
             var definded = true;
@@ -615,9 +607,9 @@ define(['d3'], function (d3) {
             var data = selectedPath.data()[0];
             var y = YLeft(data.values[data.values.length-1]);
 
-            var removeButton =  d3.select("#detailViewCanvas")
+            var removeButton =  d3.select("#"+prefix+"canvas")
                 .append("g")
-                .classed("removeButton", true)
+                .classed(prefix+"removeButton", true)
                 .attr("transform", "translate(" + (width+3) + "," + y + ")")
                 .attr("dy", ".35em")
                 .on("click", function(){
@@ -630,7 +622,7 @@ define(['d3'], function (d3) {
                 .attr("r", 10 )
                 .attr("cy",2)
                 .attr("fill", selectedPath.style("stroke"))
-                .classed("removeCircle", true);
+                .classed(prefix+"removeCircle", true);
 
 
             /* Create the text for each block */
@@ -638,56 +630,7 @@ define(['d3'], function (d3) {
                 .attr("dx", -5)
                 .attr("dy", 8)
                 .text("X")
-                .classed("removeText", true);
-        }
-
-        function chart(selection) {
-            selection.each(function (data) {
-                // Select the svg element, if it exists.
-                svg = d3.select(this)
-                    .append("svg")
-                    .attr("id", "detailView")
-                    .attr("width", width+margin.right)
-                    .attr("height", height+margin.bottom);
-
-                //update inner dimensions
-                g = svg
-                    .append("g")
-                    .attr("id","detailViewCanvas")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                //add containers for data quality problems in detail
-                gMissingTimeStamps = g
-                    .append("g")
-                    .attr("id", "MissingTimeStamp")
-                    .classed("dataQualityIndicatorDetail",true)
-                    //.attr("layerFunction",layers.missingTimeStampMarker);
-
-                gMissingValues = g
-                    .append("g")
-                    .attr("id", "$.MissingData")
-                    .classed("dataQualityIndicatorDetail",true)
-                    //.attr("layerFunction", layers.gMissingValues);
-
-                gInvalidValues = g
-                    .append("g")
-                    .attr("id", "$.InvalidData")
-                    .classed("dataQualityIndicatorDetail",true)
-                    //.attr("layerFunction", layers.gInvalidValues);
-
-                layers.axes();
-
-                updateChannels(data);
-
-                svg
-                    .on("mouseover", function(node) {
-                        overDetailView(node);
-                    })
-                    .on("mouseup", function(node) {
-                        outDetailView(node);
-                    });
-
-            });
+                .classed(prefix+"removeText", true);
         }
 
         function displayQualityIndicators(id){
@@ -706,7 +649,6 @@ define(['d3'], function (d3) {
                     layers.missingValues();
                     layers.missingTimeStampMarker()
                     break;
-
             }
         }
 
@@ -728,29 +670,29 @@ define(['d3'], function (d3) {
                     draggedChannel = null;
                 }
             }
-
         }
 
         function updateChannels(data){
             var contained = false;
-            channels.forEach(function(element,index,array){
-                if(element.name==data.name) {
-                    element.values = data.values;
-                    //calc rangeMax and rangeMin
+
+            //go through all channels and check whether the channel is already locally available
+            for(var i=0; i<channels.length;i++){
+                if(channels[i].name==data.name){
+                    channels[i].values = data.values;
                     contained = true;
+                    break;
                 }
-            });
+            }
 
             if(!contained){
                 channels.push(data);
             }
 
-
-            //remove dual axis if more than 2 channels
+            //remove dual axis if more than 2 channels exist
             if(channels.length>2) {
-                d3.select("#yAxisRight").attr("visibility","hidden");
+                d3.select("#"+prefix+"yAxisRight").attr("visibility","hidden");
             }else{
-                d3.select("#yAxisRight").attr("visibility","visible");
+                d3.select("#"+prefix+"yAxisRight").attr("visibility","visible");
 
             }
 
@@ -766,6 +708,10 @@ define(['d3'], function (d3) {
                 displayQualityIndicators(qualityIndicator);
             })
         }
+
+        /*
+            ACCESSOR FUNCTIONs
+         */
 
         // The x-accessor for the path generator; xScale ∘ xValue.
         function X(d) {
@@ -798,7 +744,7 @@ define(['d3'], function (d3) {
         }
 
         /*
-            Setter and Getter
+            SETTER and GETTER
          */
 
         chart.width = function () {
@@ -921,13 +867,12 @@ define(['d3'], function (d3) {
                     displayQualityIndicators(_);
                 } else {
                     //remove all except for the choosen one!
-                    d3.selectAll(".dataQualityIndicatorDetail").each(function(qualityIndicatorDetailLayer){
+                    d3.selectAll("."+prefix+"dataQualityIndicatorDetail").each(function(qualityIndicatorDetailLayer){
                         var element =  d3.select(this);
                         if(element.attr("id")!=qualityIndicator){
                             //clean layer
                             element.selectAll("*").remove();
                         }else{
-                            console.log("display!"+element.attr("id"));
                             if(element.selectAll("*").empty){ //if layer has been removed before - read it
                                 displayQualityIndicators(element.attr("id"));
                             }
@@ -939,6 +884,13 @@ define(['d3'], function (d3) {
         chart.definedLine = function(_){
             if (!arguments.length) return indicators;
             indicators = _;
+            return chart;
+        }
+
+        chart.id = function(_){
+            if (!arguments.length) return id;
+            id = _;
+            prefix = "detailView-"+id+"-";
             return chart;
         }
 

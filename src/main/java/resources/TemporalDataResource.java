@@ -28,6 +28,10 @@ public class TemporalDataResource {
         this.dataDAO.setAggregatedDataset(this.dataDAO.aggregate()); //pre aggregate
     }
 
+    /*
+    bassed on the different input queries different dao methods are used to access the data
+     */
+
     @GET
     @Timed
     public TemporalData readData(@QueryParam("column") List<String> columns, @QueryParam("granularity") Optional<String> granularity, @QueryParam("from") Optional<Integer> from, @QueryParam("to") Optional<Integer> to, @QueryParam("load") Optional<String> load, @QueryParam("indicator") List<String> indicators){
@@ -113,6 +117,8 @@ public class TemporalDataResource {
 
         return temporalData;
     }
+
+    //private helper functions
 
     private int getLevel(String granularity){
         switch(granularity){
